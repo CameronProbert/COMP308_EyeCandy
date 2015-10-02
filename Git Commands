@@ -1,0 +1,35 @@
+=================================================================
+                        Commands for git
+=================================================================
+
+Clone the repository initially:
+    git clone https://github.com/CameronProbert/COMP308_EyeCandy
+
+Pull from repository
+    git pull origin <branch name>
+    e.g. git pull origin (master/cam/fran/mike)
+
+Push to repository
+    git push origin <branch name>
+    e.g. git push origin (master/cam/fran/mike)
+
+Prepare files for commiting (must be performed ehen adding new 
+                             files to be commited)
+    git add <file/folder>
+    e.g. git add work (to add the work folder)
+         git add . (to add the current folder)
+
+Commit (try to use descriptive messages)
+    git commit -m "message"
+    
+Switch branch
+    git checkout <branchname>
+    e.g. git checkout (master/cam/fran/mike)
+
+Check the current working branch
+    git status
+
+Merge other branch into current working branch
+    git merge <otherbranchname>
+    e.g. git merge cam (if I am currently in the master branch
+                        this will merge master into cam.)
