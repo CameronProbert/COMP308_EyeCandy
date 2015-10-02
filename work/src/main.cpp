@@ -226,33 +226,6 @@ void draw() {
 	//
 	if (!g_useShader) {
 
-		// Texture setup
-		//
-
-		// Enable Drawing texures
-		// glEnable(GL_TEXTURE_2D);
-		// // Use Texture as the color
-		// glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		// // Set the location for binding the texture
-		// glActiveTexture(GL_TEXTURE0);
-		// // Bind the texture
-		// glBindTexture(GL_TEXTURE_2D, g_texture);
-
-		// Render a single square as our geometry
-		// You would normally render your geometry here
-		// glBegin(GL_QUADS);
-		// glNormal3f(0.0, 0.0, 1.0);
-		// glTexCoord2f(0.0, 0.0);
-		// glVertex3f(-5.0, -5.0, 0.0);
-		// glTexCoord2f(0.0, 1.0);
-		// glVertex3f(-5.0, 5.0, 0.0);
-		// glTexCoord2f(1.0, 1.0);
-		// glVertex3f(5.0, 5.0, 0.0);
-		// glTexCoord2f(1.0, 0.0);
-		// glVertex3f(5.0, -5.0, 0.0);
-		// glEnd();
-		// glFlush();
-
 
 		g_scene->renderScene();
 
@@ -262,37 +235,11 @@ void draw() {
 	//
 	} else {
 
-		// Texture setup
-		//
-
-		// // Enable Drawing texures
-		// glEnable(GL_TEXTURE_2D);
-		// // Set the location for binding the texture
-		// glActiveTexture(GL_TEXTURE0);
-		// // Bind the texture
-		// glBindTexture(GL_TEXTURE_2D, g_texture);
-
 		// Use the shader we made
 		glUseProgram(g_shader);
 
 		// Set our sampler (texture0) to use GL_TEXTURE0 as the source
 		glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
-
-
-		// Render a single square as our geometry
-		// You would normally render your geometry here
-		// glBegin(GL_QUADS);
-		// glNormal3f(0.0, 0.0, 1.0);
-		// glTexCoord2f(0.0, 0.0);
-		// glVertex3f(-5.0, -5.0, 0.0);
-		// glTexCoord2f(0.0, 1.0);
-		// glVertex3f(-5.0, 5.0, 0.0);
-		// glTexCoord2f(1.0, 1.0);
-		// glVertex3f(5.0, 5.0, 0.0);
-		// glTexCoord2f(1.0, 0.0);
-		// glVertex3f(5.0, -5.0, 0.0);
-		// glEnd();
-		// glFlush();
 
 		g_scene->renderScene();
 
@@ -303,42 +250,6 @@ void draw() {
 
 
 	}
-	float coneHeight = 2.0;
-
-	glEnable(GL_COLOR_MATERIAL);
-	// Represent spot light with OpenGL primatives
-	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-	
-	glColor3f(0.6,0.6,0.6); // Grey
-
-	glPushMatrix(); 
-
-		// Tranlate to the position of the spotlight and minus the height of the cone
-		glTranslatef(spot_x,spot_y - (coneHeight),spot_z);
-
-		// Orientate the cone
-		//glRotatef(-90,1.0,0.0,0.0);
-
-
-
-		// Change where the cone points
-		vec3 p(0.0, 0.0, -1.0);
-		vec3 d(spotDir[0],spotDir[1],spotDir[2]);
-
-		double omega = acos(dot(p, d) / length(d));
-
-		vec3 a = cross(p, d);
-
-		glRotatef(degrees(omega),a.x, a.y, a.z);
-
-		// Compute the radius using the height and the cut off angle
-		float radius = tan(spot_cut * PI /180.00) * coneHeight;
-
-		// Draw the cone
-		glutWireCone(radius, coneHeight, 32, 8);
-
-	glPopMatrix();
-
 
 
 	// Disable flags for cleanup (optional)

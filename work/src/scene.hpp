@@ -22,13 +22,7 @@ class Scene {
 
 private:
 	void initTexture(std::string, GLuint *);
-	void renderTable();
-	void renderTorus();
-	void renderSphere();
-	void renderBunny();
-	void renderBox();
-	void renderTeapot();
-
+	void renderEye();
 public:
 	Scene(int);
 	void renderScene();
