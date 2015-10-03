@@ -269,7 +269,7 @@ void Geometry::renderGeometry() {
 			vec3 norm = m_normals[m_triangles[i].v[j].n];
 
 			glNormal3f(norm.x, norm.y, norm.z);
-			glTexCoord2f(uv.x * 5, uv.y * 5);
+			glTexCoord2f(uv.x, uv.y);
 			glVertex3f(vert.x, vert.y, vert.z);
 
 		}
