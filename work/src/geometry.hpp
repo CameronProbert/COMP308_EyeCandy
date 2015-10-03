@@ -47,8 +47,21 @@ private:
 	std::vector<comp308::vec3> m_points;	// Point list
 	std::vector<comp308::vec2> m_uvs;		// Texture Coordinate list
 	std::vector<comp308::vec3> m_normals;	// Normal list
+	std::vector<comp308::vec3> m_norMain;	// Normal list
+	std::vector<comp308::vec3> m_norIris;	// Normal list
+	std::vector<comp308::vec3> m_norPupil;	// Normal list
+	std::vector<comp308::vec3> m_norOther;	// Normal list
 	std::vector<triangle> m_triangles;		// Triangle/Face list
+	std::vector<triangle> m_triMain;		// Triangle/Face list
+	std::vector<triangle> m_triIris;		// Triangle/Face list
+	std::vector<triangle> m_triLens;		// Triangle/Face list
+	std::vector<triangle> m_triCornea;		// Triangle/Face list
+	
+	std::string part = "Main"; 
 
+	int current = 0;
+	int  positions[8];
+	
 	bool m_wireFrameOn = false;
 
 	// IDs for the display list to render
@@ -56,8 +69,11 @@ private:
 	GLuint m_displayListWire = 0; // DisplayList for Wireframe
 
 	void readOBJ(std::string);
+	void copyFaces(std::vector<triangle> *, int, int);
+	
+	void renderSingleGeometry(std::vector<triangle> * ); 
 
-	void createNormals();
+	void createNormals();//std::vector<triangle>*, std::vector<comp308::vec3>*);
 
 	void createDisplayListPoly();
 	void createDisplayListWire();
@@ -70,7 +86,13 @@ public:
 	// ~GeometryManager();
 
 	void renderGeometry();
-	void toggleWireFrame();
+	
+	void renderMain();
+	void renderIris();
+	void renderLens();
+	void renderCornea();
+	
+	
 	void setAmbient(float a, float b, float c);
 	void setDiffuse(float a, float b, float c);
 	void setSpecular(float a, float b, float c);

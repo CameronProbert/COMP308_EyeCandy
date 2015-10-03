@@ -31,8 +31,7 @@ Geometry::Geometry(string filename) {
 	m_filename = filename;
 	readOBJ(filename);
 	if (m_triangles.size() > 0) {
-		createDisplayListPoly();
-		createDisplayListWire();
+		renderGeometry();
 	}
 }
 
@@ -129,11 +128,39 @@ void Geometry::readOBJ(string filename) {
 					tri.v[1] = verts[1];
 					tri.v[2] = verts[2];
 					m_triangles.push_back(tri);
+					current++;
+					
+					
 				}
+			}
+			else if (mode == "Main"){
+				part = "Main";
+				current = 0;
+				cout << part << "----------------------------" << endl;
+			}
+			else if (mode == "Iris"){
+				positions[0] = 0;
+				positions[1] = current;
+				part = "Iris";
+				cout << part << "----------------------------" << endl;
+			}
+			else if (mode == "Cornea"){
+				positions[2] = positions[1];
+				positions[3] = current;
+				part = "Cornea";
+				cout << part << "----------------------------" << endl;
+			}
+			else if (mode == "Lens"){
+				positions[4] = positions[3];
+				positions[5] = current;
+				positions[6] = current+1;
+				part = "Lens";
+				cout << part << "----------------------------" << endl;
 			}
 		}
 	}
-
+	positions[7] = m_triangles.size()-1;
+	
 	cout << "Reading OBJ file is DONE." << endl;
 	cout << m_points.size()-1 << " points" << endl;
 	cout << m_uvs.size()-1 << " uv coords" << endl;
@@ -142,13 +169,40 @@ void Geometry::readOBJ(string filename) {
 	//m_normals.clear();
 
 	// If we didn't have any normals, create them
-	if (m_normals.size() <= 1) createNormals();
+	if (m_normals.size() <= 1) createNormals();//&m_triangles, &m_normals);
+	//createNormals(m_triMain);
+	
+	copyFaces(&m_triMain, positions[0], positions[1]);
+	copyFaces(&m_triIris, positions[2], positions[3]);
+	copyFaces(&m_triCornea, positions[4], positions[5]);
+	copyFaces(&m_triLens, positions[6], positions[7]);
+	
+	cout << m_triMain[20].v[0].p << "-----------------------" << endl;
+}
+
+void Geometry::copyFaces(vector<triangle> *faces, int start, int end){
+  for(int i=start; i<end; i++){
+	    vector<vertex> verts;
+	    for(int j=0; j<3; j++){
+		vertex v;
+		v.p = m_triangles[i].v[j].p;
+		v.t = m_triangles[i].v[j].t;
+		v.n = m_triangles[i].v[j].n;
+		verts.push_back(v);
+	    }
+	    triangle tri;
+	    tri.v[0] = verts[0];
+	    tri.v[1] = verts[1];
+	    tri.v[2] = verts[2];
+	    faces->push_back(tri);
+	}
+  
 }
 
 //-------------------------------------------------------------
 // Uses the same index for a point as the index for the points normal
 //-------------------------------------------------------------
-void Geometry::createNormals() {
+void Geometry::createNormals(){//vector<triangle> *faces, vector<comp308::vec3> *normals) {
 
 	// Initialize normals
 	for (unsigned int p = 0; p < m_points.size() -1; p++){
@@ -187,17 +241,63 @@ void Geometry::createNormals() {
 	}
 
 	cout << m_normals.size()-1 << " normals created" << endl;
-
 }
 
+void Geometry::renderMain(){
+	renderSingleGeometry(&m_triMain);
+}
 
-
-void Geometry::createDisplayListPoly() {
+void Geometry::renderSingleGeometry(vector<triangle> *faces) {
+	glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
 	// Delete old list if there is one
 	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
 
 	// Create a new list
-	cout << "Creating Poly Geometry" << endl;
+	//cout << "Creating Poly Geometry" << endl;
+	m_displayListPoly = glGenLists(1);
+	glNewList(m_displayListPoly, GL_COMPILE);
+
+
+	glBegin(GL_TRIANGLES);
+	// For each face
+	for(unsigned int i=0; i<faces->size(); i++){
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			vec3 vert = m_points[(*faces)[i].v[j].p];
+			vec2 uv = m_uvs[(*faces)[i].v[j].t];
+			vec3 norm = m_normals[(*faces)[i].v[j].n];
+
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(uv.x * 5, uv.y * 5);
+			glVertex3f(vert.x, vert.y, vert.z);
+
+		}
+	}
+
+
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEndList();
+	//cout << "Finished creating Poly Geometry" << endl;
+}
+
+
+void Geometry::renderGeometry() {
+	glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
+	// Delete old list if there is one
+	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
+
+	// Create a new list
+	//cout << "Creating Poly Geometry" << endl;
 	m_displayListPoly = glGenLists(1);
 	glNewList(m_displayListPoly, GL_COMPILE);
 
@@ -225,67 +325,9 @@ void Geometry::createDisplayListPoly() {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glEndList();
-	cout << "Finished creating Poly Geometry" << endl;
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
-
-
-void Geometry::createDisplayListWire() {
-	// Delete old list if there is one
-	if (m_displayListWire) glDeleteLists(m_displayListWire, 1);
-
-
-	// Create a new list
-	cout << "Creating Wire Geometry" << endl;
-	m_displayListWire = glGenLists(1);
-	glNewList(m_displayListWire, GL_COMPILE);
-
-
-	glBegin(GL_TRIANGLES);
-	// For each face
-	for(unsigned int i=0; i<m_triangles.size(); i++){
-		// For each vertex
-		for(int j=0; j<3; j++){
-
-			vec3 vert = m_points[m_triangles[i].v[j].p];
-			//vec2 uv = m_uvs[m_triangles[i].v[j].t];
-			vec3 norm = m_normals[m_triangles[i].v[j].n];
-
-			glNormal3f(norm.x, norm.y, norm.z);
-			//glTexCoord2f(uv.x, uv.y);
-			glVertex3f(vert.x, vert.y, vert.z);
-		}
-	}
-
-	glEnd();
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glEndList();
-	cout << "Finished creating Wire Geometry" << endl;
-}
-
-
-void Geometry::renderGeometry() {
-	if (m_wireFrameOn) {
-
-		glShadeModel(GL_SMOOTH);
-		//glutWireTeapot(5.0);
-		glCallList(m_displayListWire);
-
-	} else {
-
-		glShadeModel(GL_SMOOTH);
-		//glutSolidTeapot(5.0);
-		glCallList(m_displayListPoly);
-
-	}
-}
-
-
-void Geometry::toggleWireFrame() {
-	m_wireFrameOn = !m_wireFrameOn;
-}
 
 
 void Geometry::setAmbient(float a, float b, float c){
