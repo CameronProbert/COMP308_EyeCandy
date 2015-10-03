@@ -86,7 +86,7 @@ void Geometry::readOBJ(string filename) {
 			} else if(mode == "vn") {
 				vec3 vn;
 				objLine >> vn.x >> vn.y >> vn.z;
-				m_normals.push_back(vn);
+				//m_normals.push_back(vn);
 
 			} else if(mode == "vt") {
 				vec2 vt;
@@ -113,7 +113,9 @@ void Geometry::readOBJ(string filename) {
 						}
 
 						objLine.ignore(1);	// Ignore the '/' character
-						objLine >> v.n;		// Scan in normal index
+						int normal;
+						objLine >> normal;		// Scan in normal index
+						//v.n = normal;
 					}
 					//cout << "vertex positions read in" << endl;
 					if(!(v.p ==0 && v.t==0 && v.n==0)){
@@ -137,7 +139,7 @@ void Geometry::readOBJ(string filename) {
 	cout << m_uvs.size()-1 << " uv coords" << endl;
 	cout << m_normals.size()-1 << " normals" << endl;
 	cout << m_triangles.size() << " faces" << endl;
-
+	//m_normals.clear();
 
 	// If we didn't have any normals, create them
 	if (m_normals.size() <= 1) createNormals();
