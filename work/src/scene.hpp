@@ -26,6 +26,7 @@ private:
   
 	void initTexture(std::string, GLuint *);
 	void renderEye();
+	void enableTextures();
 public:
 	Scene(int);
 	void renderScene();
