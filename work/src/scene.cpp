@@ -28,11 +28,6 @@ GLuint g_irisTexture = 0;
 // Reference to the shader
 GLuint shader = 0;
 
-float rotY = 0.0;
-float stop = 0.0;
-
-bool g_rotate = false;
-
 
 Scene::Scene(int s) {
 	shader = s;
@@ -49,15 +44,15 @@ Scene::Scene(int s) {
 	g_eyeMain->setSpecular(0.296648, 0.296648, 0.296648);
 	g_eyeMain->setShininess(0.088);
 	
-	g_eyeIris->setAmbient(0.25, 0.20725, 0.20725);
-	g_eyeIris->setDiffuse(1, 0.829, 0.829);
-	g_eyeIris->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeIris->setAmbient(0.15, 0.05, 0.05);
+	g_eyeIris->setDiffuse(0.85, 0.2, 0.2);
+	g_eyeIris->setSpecular(0.296648, 0.1, 0.1);
 	g_eyeIris->setShininess(0.088);
 	
-	g_eyeLens->setAmbient(0.25, 0.20725, 0.20725);
-	g_eyeLens->setDiffuse(1, 0.829, 0.829);
-	g_eyeLens->setSpecular(0.296648, 0.296648, 0.296648);
-	g_eyeLens->setShininess(0.088);
+	g_eyeLens->setAmbient(0.f, 0.f, 0.f);
+	g_eyeLens->setDiffuse(0.f, 0.f, 0.f);
+	g_eyeLens->setSpecular(0.f, 0.f, 0.f);
+	g_eyeLens->setShininess(0.f);
 	
 	g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725);
 	g_eyeCornea->setDiffuse(1, 0.829, 0.829);
@@ -94,18 +89,13 @@ void Scene::enableTextures(){
 }
 
 void Scene::renderScene(){
-  //enableTextures();
 	glPushMatrix(); 
 
     // rotate the eye to follow the mouse
 		glRotatef(degrees(thetaX),1,0,0); // Rotate scene around x axis
 		glRotatef(degrees(thetaY),0,1,0); // Rotate scene around y axis
 		
-		// Set the iris texture
-		//glBindTexture(GL_TEXTURE_2D, g_irisTexture);
-		
 		// Render the eye
-		glEnable(GL_POLYGON_STIPPLE);
 		renderEye();
 
 
@@ -118,27 +108,34 @@ void Scene::lookAt(float x, float y){
   thetaY = x;
 }
 
-
-void Scene::renderEye(){
-	material m = g_eyeMain->m_material;
-
-	glMaterialfv(GL_FRONT, GL_AMBIENT, m.a);
+void setMaterial(material m){
+  glMaterialfv(GL_FRONT, GL_AMBIENT, m.a);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, m.d);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, m.s);
 	glMaterialf(GL_FRONT, GL_SHININESS, m.shininess * 128.0);
-
-
-	glPushMatrix(); 
-		glScalef(0.1,0.1,0.1);
-		//g_eyeMain->renderGeometry();
-		g_eyeIris->renderGeometry();
-		g_eyeLens->renderGeometry();
-		//g_eyeCornea->renderGeometry();
-	glPopMatrix();
 }
 
 
-void Scene::rotate(){
-	stop = rotY;
-	g_rotate = !g_rotate;
+void Scene::renderEye(){
+
+	glPushMatrix(); 
+		glScalef(0.1,0.1,0.1);
+		
+		setMaterial(g_eyeMain->m_material);
+		g_eyeMain->renderGeometry();
+		
+		enableTextures();
+		glBindTexture(GL_TEXTURE_2D, g_irisTexture);
+		setMaterial(g_eyeIris->m_material);
+		g_eyeIris->renderGeometry();
+		glDisable(GL_TEXTURE_2D);
+		
+		setMaterial(g_eyeLens->m_material);
+		g_eyeLens->renderGeometry();
+		
+		glEnable(GL_BLEND);
+		setMaterial(g_eyeCornea->m_material);
+		//g_eyeCornea->renderGeometry();
+		
+	glPopMatrix();
 }
