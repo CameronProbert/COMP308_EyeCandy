@@ -21,10 +21,14 @@
 class Scene {
 
 private:
+  float thetaX;
+  float thetaY;
+  
 	void initTexture(std::string, GLuint *);
 	void renderEye();
 public:
 	Scene(int);
 	void renderScene();
 	void rotate();
+  void lookAt(float, float);
 };

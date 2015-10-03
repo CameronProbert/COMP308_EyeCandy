@@ -179,35 +179,35 @@ void draw() {
     glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
 	
 	// Weak point light
-	float pointDiffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
-	float pointSpecular[] = {0.6f, 0.6f, 0.6f, 1.0f};
-	float pointPos[] = {-4.0, 3.0, 0.0, 1.0f};
-	GLfloat pointExponent = 8.0; 
+	//float pointDiffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
+	//float pointSpecular[] = {0.6f, 0.6f, 0.6f, 1.0f};
+	//float pointPos[] = {-4.0, 3.0, 0.0, 1.0f};
+	//GLfloat pointExponent = 8.0; 
 
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, pointDiffuse);
-	glLightfv(GL_LIGHT2, GL_SPECULAR, pointSpecular);
-	glLightfv(GL_LIGHT2, GL_POSITION, pointPos);
-	glLightfv(GL_LIGHT2, GL_SPOT_EXPONENT, &pointExponent);
+	//glLightfv(GL_LIGHT2, GL_DIFFUSE, pointDiffuse);
+	//glLightfv(GL_LIGHT2, GL_SPECULAR, pointSpecular);
+	//glLightfv(GL_LIGHT2, GL_POSITION, pointPos);
+	//glLightfv(GL_LIGHT2, GL_SPOT_EXPONENT, &pointExponent);
 
 
 	// Strong spotlight
-	float spotDiffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
-	float spotSpecular[] = {0.9f, 0.9f, 0.9f, 1.0f};
-	float spotPos[] = {spot_x, spot_y, spot_z, 1.0f};
-	float spotDir[] = {spot_dirX, spot_dirY, spot_dirZ};
-	GLfloat spotCutOff = spot_cut; 
-	GLfloat spotExponent = 1.0; 
+	//float spotDiffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	//float spotSpecular[] = {0.9f, 0.9f, 0.9f, 1.0f};
+	//float spotPos[] = {spot_x, spot_y, spot_z, 1.0f};
+	//float spotDir[] = {spot_dirX, spot_dirY, spot_dirZ};
+	//GLfloat spotCutOff = spot_cut; 
+	//GLfloat spotExponent = 1.0; 
 
-	glLightfv(GL_LIGHT3, GL_DIFFUSE, spotDiffuse);
-	glLightfv(GL_LIGHT3, GL_SPECULAR, spotSpecular);
-	glLightfv(GL_LIGHT3, GL_POSITION, spotPos);
-	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.5);
-	glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
-	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.2);
+	//glLightfv(GL_LIGHT3, GL_DIFFUSE, spotDiffuse);
+	//glLightfv(GL_LIGHT3, GL_SPECULAR, spotSpecular);
+	//glLightfv(GL_LIGHT3, GL_POSITION, spotPos);
+	//glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.5);
+	//glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
+	//glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.2);
 
-	glLightfv(GL_LIGHT3, GL_SPOT_CUTOFF, &spotCutOff);
-	glLightfv(GL_LIGHT3, GL_SPOT_DIRECTION, spotDir);
-	glLightfv(GL_LIGHT3, GL_SPOT_EXPONENT, &spotExponent);
+	//glLightfv(GL_LIGHT3, GL_SPOT_CUTOFF, &spotCutOff);
+	//glLightfv(GL_LIGHT3, GL_SPOT_DIRECTION, spotDir);
+	//glLightfv(GL_LIGHT3, GL_SPOT_EXPONENT, &spotExponent);
 
 
 
@@ -291,81 +291,6 @@ void keyboardCallback(unsigned char key, int x, int y) {
 	//cout << "Keyboard Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
-	switch(key){
-
-		case 't':
-			g_scene->rotate();
-			break;
-
-		case 'q':
-			spot_cut -= 0.4;
-
-			if(spot_cut < 0.0){
-				spot_cut = 0.0;
-			}
-			break;
-
-		case 'e':
-			spot_cut += 0.4;
-
-			if(spot_cut > 90.0){
-				spot_cut = 90.0;
-			}
-			break;
-		case 'z':
-			dir_trigger = !dir_trigger;
-			break;
-
-		case 'r':
-			spot_y += 0.1;
-			break;
-
-		case 'f':
-			spot_y -= 0.1;
-			break;
-
-		}
-
-		// Change spot direction
-		if(dir_trigger){
-
-			switch(key){
-
-				case 'w':
-					spot_dirZ -= 0.05;
-					break;
-				case 'a':
-					spot_dirX -= 0.05;
-					break;
-				case 's':
-					spot_dirZ += 0.05;
-					break;
-				case 'd':
-					spot_dirX += 0.05;
-					break;
-			}
-		}
-		// Change spot postion
-		else{
-
-			switch(key){
-
-				case 'w':
-					spot_z -= 0.1;
-					break;
-				case 'a':
-					spot_x -= 0.1;
-					break;
-				case 's':
-					spot_z += 0.1;
-					break;
-				case 'd':
-					spot_x += 0.1;
-					break;
-			}
-
-		}
-
 }
 
 
@@ -387,42 +312,24 @@ void mouseCallback(int button, int state, int x, int y) {
 	// YOUR CODE GOES HERE
 	// ...
 	switch(button){
-
-		case 0: // left mouse button
-			g_mouseDown = (state==0);
-			g_mousePos = vec2(x, y);
-			break;
-
 		case 2: // right mouse button
 			if (state==0)
 				g_useShader = !g_useShader;
 			break;
-
-		case 3: // scroll foward/up
-			g_zoomFactor /= 1.1;
-			break;
-
-		case 4: // scroll back/down
-			g_zoomFactor *= 1.1;
-			break;
 	}
 }
-
 
 // Mouse Motion Callback function
 // Called once per frame if the mouse has moved and
 // at least one mouse button has an active state
 // 
 void mouseMotionCallback(int x, int y) {
-	//cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
+	cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
-	if (g_mouseDown) {
-		vec2 dif = vec2(x,y) - g_mousePos;
-		g_mousePos = vec2(x,y);
-		g_yRotation += 0.3 * dif.x;
-		g_xRotation += 0.3 * dif.y;
-	}
+	float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/2.f));
+  float thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/2.f));
+	g_scene->lookAt(thetaX, thetaY);
 }
 
 
@@ -471,7 +378,7 @@ int main(int argc, char **argv) {
 	glutSpecialFunc(specialCallback);
 
 	glutMouseFunc(mouseCallback);
-	glutMotionFunc(mouseMotionCallback);
+	glutPassiveMotionFunc(mouseMotionCallback);
 
 	initLight();
 	initShader();

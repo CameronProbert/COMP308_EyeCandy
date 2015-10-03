@@ -47,17 +47,8 @@ void Scene::renderScene(){
 
 	glPushMatrix(); 
 
-		glRotatef(rotY,0,1,0); // Rotate scene around y axis
-
-		if(g_rotate){
-			rotY+=1.0;
-			if(rotY == 360.0){
-				rotY = 0.0;
-			}
-			if(rotY == stop){
-				g_rotate = false;
-			}
-		}
+		glRotatef(degrees(thetaX),1,0,0); // Rotate scene around x axis
+		glRotatef(degrees(thetaY),0,1,0); // Rotate scene around y axis
 		
 		renderEye();
 
@@ -65,6 +56,11 @@ void Scene::renderScene(){
 	glPopMatrix();
 }
 
+
+void Scene::lookAt(float x, float y){
+  thetaX = y;
+  thetaY = x;
+}
 
 
 void Scene::renderEye(){
