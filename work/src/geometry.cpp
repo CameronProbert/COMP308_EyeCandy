@@ -247,6 +247,18 @@ void Geometry::renderMain(){
 	renderSingleGeometry(&m_triMain);
 }
 
+void Geometry::renderIris(){
+	renderSingleGeometry(&m_triIris);
+}
+
+void Geometry::renderCornea(){
+	renderSingleGeometry(&m_triCornea);
+}
+
+void Geometry::renderLens(){
+	renderSingleGeometry(&m_triLens);
+}
+
 void Geometry::renderSingleGeometry(vector<triangle> *faces) {
 	glShadeModel(GL_SMOOTH);
 	//glutSolidTeapot(5.0);
