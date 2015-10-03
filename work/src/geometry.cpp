@@ -134,29 +134,12 @@ void Geometry::readOBJ(string filename) {
 					
 				}
 			}
-			else if (mode == "Main"){
-				part = "Main";
-				current = 0;
-				cout << part << "----------------------------" << endl;
+			else if (mode == currentDraw){
+				startPoint = current;
+				cout << currentDraw << "----------------------------" << endl;
 			}
-			else if (mode == "Iris"){
-				positions[0] = 0;
-				positions[1] = current;
-				part = "Iris";
-				cout << part << "----------------------------" << endl;
-			}
-			else if (mode == "Cornea"){
-				positions[2] = positions[1];
-				positions[3] = current;
-				part = "Cornea";
-				cout << part << "----------------------------" << endl;
-			}
-			else if (mode == "Lens"){
-				positions[4] = positions[3];
-				positions[5] = current;
-				positions[6] = current+1;
-				part = "Lens";
-				cout << part << "----------------------------" << endl;
+			else if(mode != currentDraw && current > startPoint && startPoint>finalPoint){
+			  finalPoint=current;
 			}
 		}
 	}
@@ -170,15 +153,7 @@ void Geometry::readOBJ(string filename) {
 	//m_normals.clear();
 
 	// If we didn't have any normals, create them
-	if (m_normals.size() <= 1) createNormals();//&m_triangles, &m_normals);
-	//createNormals(m_triMain);
-	
-	//if(type == "Main")copyFaces(&m_triFinal, positions[0], positions[1]);
-	//if(type == "Iris")copyFaces(&m_triFinal, positions[2], positions[3]);
-	//if(type == "Cornea")copyFaces(&m_triFinal, positions[4], positions[5]);
-	//if(type == "Lens")copyFaces(&m_triFinal, positions[6], positions[7]);
-	
-	//cout << "size of tri final" << m_triFinal.size() << endl;
+	if (m_normals.size() <= 1) createNormals();
 }
 
 //-------------------------------------------------------------
@@ -238,29 +213,10 @@ void Geometry::renderGeometry() {
 	m_displayListPoly = glGenLists(1);
 	glNewList(m_displayListPoly, GL_COMPILE);
 	
-	int from = 0;
-	int to = 0;
-	
-	if(currentDraw == "Main"){
-	  from = positions[0];
-	  to = positions[1];
-	}
-	if(currentDraw == "Iris"){
-	  from = positions[2];
-	  to = positions[3];
-	}
-	if(currentDraw == "Cornea"){
-	  from = positions[4];
-	  to = positions[5];
-	}
-	if(currentDraw == "Lens"){
-	  from = positions[6];
-	  to = positions[7];
-	}
 
 	glBegin(GL_TRIANGLES);
 	// For each face
-	for(unsigned int i=from; i<to; i++){
+	for(unsigned int i=startPoint; i<finalPoint; i++){
 		// For each vertex
 		for(int j=0; j<3; j++){
 
