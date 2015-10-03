@@ -130,10 +130,10 @@ void Scene::renderEye(){
 
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
-		//g_eyeMain->renderGeometry();
+		g_eyeMain->renderGeometry();
 		g_eyeIris->renderGeometry();
 		g_eyeLens->renderGeometry();
-		//g_eyeCornea->renderGeometry();
+		g_eyeCornea->renderGeometry();
 	glPopMatrix();
 }
 

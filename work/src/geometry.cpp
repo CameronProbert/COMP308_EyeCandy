@@ -129,21 +129,19 @@ void Geometry::readOBJ(string filename) {
 					tri.v[1] = verts[1];
 					tri.v[2] = verts[2];
 					m_triangles.push_back(tri);
-					current++;
-					
-					
+					current++;	
 				}
 			}
 			else if (mode == currentDraw){
 				startPoint = current;
 				cout << currentDraw << "----------------------------" << endl;
 			}
-			else if(mode != currentDraw && current > startPoint && startPoint>finalPoint){
+			else if((currentDraw == "Main" && mode == "Iris") || (currentDraw == "Iris" && mode == "Cornea") || (currentDraw == "Cornea" && mode == "Lens")){
 			  finalPoint=current;
 			}
 		}
 	}
-	positions[7] = m_triangles.size()-1;
+	if(currentDraw == "Lens") finalPoint = m_triangles.size()-1;
 	
 	cout << "Reading OBJ file is DONE." << endl;
 	cout << m_points.size()-1 << " points" << endl;

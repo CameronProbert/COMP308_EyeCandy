@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include "comp308.hpp"
 
@@ -55,10 +56,9 @@ private:
 	std::vector<triangle> m_triFinal;		// Triangle/Face list
 
 
-	int startPoint = 9999999999; // arbitrary large value
+	int startPoint = std::numeric_limits<int>::max(); // arbitrary large value
 	int finalPoint = 0;
 	int current = 0;
-	int  positions[8];
 	
 	bool m_wireFrameOn = false;
 	std::string currentDraw;
