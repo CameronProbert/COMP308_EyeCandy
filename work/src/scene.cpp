@@ -30,7 +30,7 @@ GLuint shader = 0;
 Scene::Scene(int s) {
 	shader = s;
 
-	g_eyeball = new Geometry("../work/res/assets/sphere.obj"); // bunny
+	g_eyeball = new Geometry("../work/res/assets/eyeFull.obj"); // bunny
 		g_eyeball->setAmbient(0.25, 0.20725, 0.20725);
 		g_eyeball->setDiffuse(1, 0.829, 0.829);
 		g_eyeball->setSpecular(0.296648, 0.296648, 0.296648);
@@ -73,7 +73,7 @@ void Scene::renderEye(){
 
 
 	glPushMatrix(); 
-		glScalef(5,5,5);
+		glScalef(0.1,0.1,0.1);
 		g_eyeball->renderGeometry();
 	glPopMatrix();
 }

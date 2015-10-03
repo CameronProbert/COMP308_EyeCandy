@@ -115,10 +115,11 @@ void Geometry::readOBJ(string filename) {
 						objLine.ignore(1);	// Ignore the '/' character
 						objLine >> v.n;		// Scan in normal index
 					}
-
-					verts.push_back(v);
+					//cout << "vertex positions read in" << endl;
+					if(!(v.p ==0 && v.t==0 && v.n==0)){
+					  verts.push_back(v);
+					}
 				}
-
 				// IFF we have 3 verticies, construct a triangle
 				if(verts.size() == 3){
 					triangle tri;
@@ -126,7 +127,6 @@ void Geometry::readOBJ(string filename) {
 					tri.v[1] = verts[1];
 					tri.v[2] = verts[2];
 					m_triangles.push_back(tri);
-
 				}
 			}
 		}
