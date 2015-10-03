@@ -242,16 +242,25 @@ void Geometry::renderGeometry() {
 
 
 
-void Geometry::setAmbient(float a, float b, float c){
-	m_material.a[0] = a; m_material.a[1] = b; m_material.a[2] = c;
+void Geometry::setAmbient(float a, float b, float c, float d){
+	m_material.a[0] = a; 
+	m_material.a[1] = b; 
+	m_material.a[2] = c;
+	m_material.a[3] = d;
 }
 
-void Geometry::setDiffuse(float a, float b, float c){
-	m_material.d[0] = a; m_material.d[1] = b; m_material.d[2] = c;
+void Geometry::setDiffuse(float a, float b, float c, float d){
+	m_material.d[0] = a; 
+	m_material.d[1] = b; 
+	m_material.d[2] = c;
+	m_material.d[3] = d;
 }
 
-void Geometry::setSpecular(float a, float b, float c){
-	m_material.s[0] = a; m_material.s[1] = b; m_material.s[2] = c;
+void Geometry::setSpecular(float a, float b, float c, float d){
+	m_material.s[0] = a; 
+	m_material.s[1] = b; 
+	m_material.s[2] = c;
+	m_material.s[3] = d;
 }
 
 void Geometry::setShininess(float s){

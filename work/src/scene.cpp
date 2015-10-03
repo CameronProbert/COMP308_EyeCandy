@@ -39,24 +39,24 @@ Scene::Scene(int s) {
 	g_eyeLens = new Geometry("../work/res/assets/eyeFull.obj", "Lens"); 
 	g_eyeCornea = new Geometry("../work/res/assets/eyeFull.obj", "Cornea"); 
 	
-	g_eyeMain->setAmbient(0.25, 0.20725, 0.20725);
-	g_eyeMain->setDiffuse(1, 0.829, 0.829);
-	g_eyeMain->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeMain->setAmbient(0.25, 0.20725, 0.20725, 1.f);
+	g_eyeMain->setDiffuse(1, 0.829, 0.829, 1.f);
+	g_eyeMain->setSpecular(0.296648, 0.296648, 0.296648, 1.f);
 	g_eyeMain->setShininess(0.088);
 	
-	g_eyeIris->setAmbient(0.15, 0.05, 0.05);
-	g_eyeIris->setDiffuse(0.85, 0.2, 0.2);
-	g_eyeIris->setSpecular(0.296648, 0.1, 0.1);
+	g_eyeIris->setAmbient(0.15, 0.05, 0.05, 1.f);
+	g_eyeIris->setDiffuse(0.85, 0.2, 0.2, 1.f);
+	g_eyeIris->setSpecular(0.296648, 0.1, 0.1, 1.f);
 	g_eyeIris->setShininess(0.088);
 	
-	g_eyeLens->setAmbient(0.f, 0.f, 0.f);
-	g_eyeLens->setDiffuse(0.f, 0.f, 0.f);
-	g_eyeLens->setSpecular(0.f, 0.f, 0.f);
+	g_eyeLens->setAmbient(0.f, 0.f, 0.f, 1.f);
+	g_eyeLens->setDiffuse(0.f, 0.f, 0.f, 1.f);
+	g_eyeLens->setSpecular(0.f, 0.f, 0.f, 1.f);
 	g_eyeLens->setShininess(0.f);
 	
-	g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725);
-	g_eyeCornea->setDiffuse(1, 0.829, 0.829);
-	g_eyeCornea->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725, 0.5f);
+	g_eyeCornea->setDiffuse(1, 0.829, 0.829, 0.5f);
+	g_eyeCornea->setSpecular(0.296648, 0.296648, 0.296648, 0.5f);
 	g_eyeCornea->setShininess(0.088);
 }
 
@@ -135,7 +135,12 @@ void Scene::renderEye(){
 		
 		glEnable(GL_BLEND);
 		setMaterial(g_eyeCornea->m_material);
-		//g_eyeCornea->renderGeometry();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDepthMask(0);
+		//shaderManager.UseStockShader(GLT_SHADER_IDENTITY, g_eyeCornea->m_material);
+		g_eyeCornea->renderGeometry();
+		glDepthMask(1);
+		glDisable(GL_BLEND);
 		
 	glPopMatrix();
 }

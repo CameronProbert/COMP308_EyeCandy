@@ -33,9 +33,9 @@ struct triangle {
 };
 
 struct material {
-	float a[3]; //ambient
-	float d[3]; //diffuse
-	float s[3]; //specular
+	float a[4]; //ambient
+	float d[4]; //diffuse
+	float s[4]; //specular
 	float shininess = 0;
 };
 
@@ -84,9 +84,9 @@ public:
 
 	void renderGeometry();
 	
-	void setAmbient(float a, float b, float c);
-	void setDiffuse(float a, float b, float c);
-	void setSpecular(float a, float b, float c);
+	void setAmbient(float a, float b, float c, float d);
+	void setDiffuse(float a, float b, float c, float d);
+	void setSpecular(float a, float b, float c, float d);
 	void setShininess(float);
 	material getMat();
 
