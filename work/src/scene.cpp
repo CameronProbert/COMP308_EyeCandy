@@ -17,7 +17,10 @@ using namespace comp308;
 
 // Geometry for the scene
 
-Geometry *g_eyeball = nullptr;
+Geometry *g_eyeMain = nullptr;
+Geometry *g_eyeIris = nullptr;
+Geometry *g_eyeCornea = nullptr;
+Geometry *g_eyeLens = nullptr;
 
 // Textures
 GLuint g_irisTexture = 0;
@@ -36,11 +39,30 @@ Scene::Scene(int s) {
   
   initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
   
-	g_eyeball = new Geometry("../work/res/assets/eyeFull.obj"); // bunny
-  g_eyeball->setAmbient(0.25, 0.20725, 0.20725);
-	g_eyeball->setDiffuse(1, 0.829, 0.829);
-	g_eyeball->setSpecular(0.296648, 0.296648, 0.296648);
-	g_eyeball->setShininess(0.088);
+	g_eyeMain = new Geometry("../work/res/assets/eyeFull.obj", "Main"); 
+	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
+	g_eyeLens = new Geometry("../work/res/assets/eyeFull.obj", "Lens"); 
+	g_eyeCornea = new Geometry("../work/res/assets/eyeFull.obj", "Cornea"); 
+	
+	g_eyeMain->setAmbient(0.25, 0.20725, 0.20725);
+	g_eyeMain->setDiffuse(1, 0.829, 0.829);
+	g_eyeMain->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeMain->setShininess(0.088);
+	
+	g_eyeIris->setAmbient(0.25, 0.20725, 0.20725);
+	g_eyeIris->setDiffuse(1, 0.829, 0.829);
+	g_eyeIris->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeIris->setShininess(0.088);
+	
+	g_eyeLens->setAmbient(0.25, 0.20725, 0.20725);
+	g_eyeLens->setDiffuse(1, 0.829, 0.829);
+	g_eyeLens->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeLens->setShininess(0.088);
+	
+	g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725);
+	g_eyeCornea->setDiffuse(1, 0.829, 0.829);
+	g_eyeCornea->setSpecular(0.296648, 0.296648, 0.296648);
+	g_eyeCornea->setShininess(0.088);
 }
 
 void Scene::initTexture(std::string fileName, GLuint *texName) {
@@ -98,7 +120,7 @@ void Scene::lookAt(float x, float y){
 
 
 void Scene::renderEye(){
-	material m = g_eyeball->m_material;
+	material m = g_eyeMain->m_material;
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, m.a);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, m.d);
@@ -108,10 +130,10 @@ void Scene::renderEye(){
 
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
-		//g_eyeball->renderMain();
-		g_eyeball->renderIris();
-		//g_eyeball->renderCornea();
-		//g_eyeball->renderLens();
+		//g_eyeMain->renderGeometry();
+		g_eyeIris->renderGeometry();
+		g_eyeLens->renderGeometry();
+		//g_eyeCornea->renderGeometry();
 	glPopMatrix();
 }
 

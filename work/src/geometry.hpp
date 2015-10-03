@@ -52,10 +52,7 @@ private:
 	std::vector<comp308::vec3> m_norPupil;	// Normal list
 	std::vector<comp308::vec3> m_norOther;	// Normal list
 	std::vector<triangle> m_triangles;		// Triangle/Face list
-	std::vector<triangle> m_triMain;		// Triangle/Face list
-	std::vector<triangle> m_triIris;		// Triangle/Face list
-	std::vector<triangle> m_triLens;		// Triangle/Face list
-	std::vector<triangle> m_triCornea;		// Triangle/Face list
+	std::vector<triangle> m_triFinal;		// Triangle/Face list
 	
 	std::string part = "Main"; 
 
@@ -63,6 +60,7 @@ private:
 	int  positions[8];
 	
 	bool m_wireFrameOn = false;
+	std::string currentDraw;
 
 	// IDs for the display list to render
 	GLuint m_displayListPoly = 0; // DisplayList for Polygon
@@ -70,8 +68,6 @@ private:
 
 	void readOBJ(std::string);
 	void copyFaces(std::vector<triangle> *, int, int);
-	
-	void renderSingleGeometry(std::vector<triangle> * ); 
 
 	void createNormals();//std::vector<triangle>*, std::vector<comp308::vec3>*);
 
@@ -82,16 +78,10 @@ public:
 	material m_material;
 
 
-	Geometry(std::string);
+	Geometry(std::string, std::string);
 	// ~GeometryManager();
 
 	void renderGeometry();
-	
-	void renderMain();
-	void renderIris();
-	void renderLens();
-	void renderCornea();
-	
 	
 	void setAmbient(float a, float b, float c);
 	void setDiffuse(float a, float b, float c);

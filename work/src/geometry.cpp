@@ -27,7 +27,8 @@ using namespace std;
 using namespace comp308;
 
 
-Geometry::Geometry(string filename) {
+Geometry::Geometry(string filename, string t) {
+	currentDraw = t;
 	m_filename = filename;
 	readOBJ(filename);
 	if (m_triangles.size() > 0) {
@@ -172,31 +173,12 @@ void Geometry::readOBJ(string filename) {
 	if (m_normals.size() <= 1) createNormals();//&m_triangles, &m_normals);
 	//createNormals(m_triMain);
 	
-	copyFaces(&m_triMain, positions[0], positions[1]);
-	copyFaces(&m_triIris, positions[2], positions[3]);
-	copyFaces(&m_triCornea, positions[4], positions[5]);
-	copyFaces(&m_triLens, positions[6], positions[7]);
+	//if(type == "Main")copyFaces(&m_triFinal, positions[0], positions[1]);
+	//if(type == "Iris")copyFaces(&m_triFinal, positions[2], positions[3]);
+	//if(type == "Cornea")copyFaces(&m_triFinal, positions[4], positions[5]);
+	//if(type == "Lens")copyFaces(&m_triFinal, positions[6], positions[7]);
 	
-	cout << m_triMain[20].v[0].p << "-----------------------" << endl;
-}
-
-void Geometry::copyFaces(vector<triangle> *faces, int start, int end){
-  for(int i=start; i<end; i++){
-	    vector<vertex> verts;
-	    for(int j=0; j<3; j++){
-		vertex v;
-		v.p = m_triangles[i].v[j].p;
-		v.t = m_triangles[i].v[j].t;
-		v.n = m_triangles[i].v[j].n;
-		verts.push_back(v);
-	    }
-	    triangle tri;
-	    tri.v[0] = verts[0];
-	    tri.v[1] = verts[1];
-	    tri.v[2] = verts[2];
-	    faces->push_back(tri);
-	}
-  
+	//cout << "size of tri final" << m_triFinal.size() << endl;
 }
 
 //-------------------------------------------------------------
@@ -243,63 +225,6 @@ void Geometry::createNormals(){//vector<triangle> *faces, vector<comp308::vec3> 
 	cout << m_normals.size()-1 << " normals created" << endl;
 }
 
-void Geometry::renderMain(){
-	renderSingleGeometry(&m_triMain);
-}
-
-void Geometry::renderIris(){
-	renderSingleGeometry(&m_triIris);
-}
-
-void Geometry::renderCornea(){
-	renderSingleGeometry(&m_triCornea);
-}
-
-void Geometry::renderLens(){
-	renderSingleGeometry(&m_triLens);
-}
-
-void Geometry::renderSingleGeometry(vector<triangle> *faces) {
-	glShadeModel(GL_SMOOTH);
-	//glutSolidTeapot(5.0);
-	glCallList(m_displayListPoly);
-	
-	// Delete old list if there is one
-	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
-
-	// Create a new list
-	//cout << "Creating Poly Geometry" << endl;
-	m_displayListPoly = glGenLists(1);
-	glNewList(m_displayListPoly, GL_COMPILE);
-
-
-	glBegin(GL_TRIANGLES);
-	// For each face
-	for(unsigned int i=0; i<faces->size(); i++){
-		// For each vertex
-		for(int j=0; j<3; j++){
-
-			vec3 vert = m_points[(*faces)[i].v[j].p];
-			vec2 uv = m_uvs[(*faces)[i].v[j].t];
-			vec3 norm = m_normals[(*faces)[i].v[j].n];
-
-			glNormal3f(norm.x, norm.y, norm.z);
-			glTexCoord2f(uv.x, uv.y);
-			glVertex3f(vert.x, vert.y, vert.z);
-
-		}
-	}
-
-
-	glEnd();
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glEndList();
-	//cout << "Finished creating Poly Geometry" << endl;
-}
-
-
 void Geometry::renderGeometry() {
 	glShadeModel(GL_SMOOTH);
 	//glutSolidTeapot(5.0);
@@ -312,11 +237,30 @@ void Geometry::renderGeometry() {
 	//cout << "Creating Poly Geometry" << endl;
 	m_displayListPoly = glGenLists(1);
 	glNewList(m_displayListPoly, GL_COMPILE);
-
+	
+	int from = 0;
+	int to = 0;
+	
+	if(currentDraw == "Main"){
+	  from = positions[0];
+	  to = positions[1];
+	}
+	if(currentDraw == "Iris"){
+	  from = positions[2];
+	  to = positions[3];
+	}
+	if(currentDraw == "Cornea"){
+	  from = positions[4];
+	  to = positions[5];
+	}
+	if(currentDraw == "Lens"){
+	  from = positions[6];
+	  to = positions[7];
+	}
 
 	glBegin(GL_TRIANGLES);
 	// For each face
-	for(unsigned int i=0; i<m_triangles.size(); i++){
+	for(unsigned int i=from; i<to; i++){
 		// For each vertex
 		for(int j=0; j<3; j++){
 
