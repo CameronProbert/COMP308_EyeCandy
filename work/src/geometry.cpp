@@ -244,19 +244,168 @@ void Geometry::createNormals(){//vector<triangle> *faces, vector<comp308::vec3> 
 }
 
 void Geometry::renderMain(){
-	renderSingleGeometry(&m_triMain);
+	//renderSingleGeometry(&m_triMain);
+  glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
+	// Delete old list if there is one
+	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
+
+	// Create a new list
+	//cout << "Creating Poly Geometry" << endl;
+	m_displayListPoly = glGenLists(1);
+	glNewList(m_displayListPoly, GL_COMPILE);
+
+
+	glBegin(GL_TRIANGLES);
+	// For each face
+	for(unsigned int i=0; i<m_triMain.size(); i++){
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			vec3 vert = m_points[m_triMain[i].v[j].p];
+			vec2 uv = m_uvs[m_triMain[i].v[j].t];
+			vec3 norm = m_normals[m_triMain[i].v[j].n];
+
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(uv.x, uv.y);
+			glVertex3f(vert.x, vert.y, vert.z);
+
+		}
+	}
+
+
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEndList();
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
 void Geometry::renderIris(){
-	renderSingleGeometry(&m_triIris);
+	//renderSingleGeometry(&m_triIris);
+  glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
+	// Delete old list if there is one
+	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
+
+	// Create a new list
+	//cout << "Creating Poly Geometry" << endl;
+	m_displayListPoly = glGenLists(1);
+	glNewList(m_displayListPoly, GL_COMPILE);
+
+
+	glBegin(GL_TRIANGLES);
+	// For each face
+	for(unsigned int i=0; i<m_triIris.size(); i++){
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			vec3 vert = m_points[m_triIris[i].v[j].p];
+			vec2 uv = m_uvs[m_triIris[i].v[j].t];
+			vec3 norm = m_normals[m_triIris[i].v[j].n];
+
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(uv.x, uv.y);
+			glVertex3f(vert.x, vert.y, vert.z);
+
+		}
+	}
+
+
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEndList();
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
 void Geometry::renderCornea(){
-	renderSingleGeometry(&m_triCornea);
+	//renderSingleGeometry(&m_triCornea);
+  glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
+	// Delete old list if there is one
+	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
+
+	// Create a new list
+	//cout << "Creating Poly Geometry" << endl;
+	m_displayListPoly = glGenLists(1);
+	glNewList(m_displayListPoly, GL_COMPILE);
+
+
+	glBegin(GL_TRIANGLES);
+	// For each face
+	for(unsigned int i=0; i<m_triCornea.size(); i++){
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			vec3 vert = m_points[m_triCornea[i].v[j].p];
+			vec2 uv = m_uvs[m_triCornea[i].v[j].t];
+			vec3 norm = m_normals[m_triCornea[i].v[j].n];
+
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(uv.x, uv.y);
+			glVertex3f(vert.x, vert.y, vert.z);
+
+		}
+	}
+
+
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEndList();
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
 void Geometry::renderLens(){
-	renderSingleGeometry(&m_triLens);
+	//renderSingleGeometry(&m_triLens);
+  
+  glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
+	// Delete old list if there is one
+	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
+
+	// Create a new list
+	//cout << "Creating Poly Geometry" << endl;
+	m_displayListPoly = glGenLists(1);
+	glNewList(m_displayListPoly, GL_COMPILE);
+
+
+	glBegin(GL_TRIANGLES);
+	// For each face
+	for(unsigned int i=0; i<m_triLens.size(); i++){
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			vec3 vert = m_points[m_triLens[i].v[j].p];
+			vec2 uv = m_uvs[m_triLens[i].v[j].t];
+			vec3 norm = m_normals[m_triLens[i].v[j].n];
+
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(uv.x, uv.y);
+			glVertex3f(vert.x, vert.y, vert.z);
+
+		}
+	}
+
+
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glEndList();
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
 void Geometry::renderSingleGeometry(vector<triangle> *faces) {
@@ -284,7 +433,7 @@ void Geometry::renderSingleGeometry(vector<triangle> *faces) {
 			vec3 norm = m_normals[(*faces)[i].v[j].n];
 
 			glNormal3f(norm.x, norm.y, norm.z);
-			glTexCoord2f(uv.x * 5, uv.y * 5);
+			glTexCoord2f(uv.x, uv.y);
 			glVertex3f(vert.x, vert.y, vert.z);
 
 		}
