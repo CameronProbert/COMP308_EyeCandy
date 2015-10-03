@@ -53,9 +53,10 @@ private:
 	std::vector<comp308::vec3> m_norOther;	// Normal list
 	std::vector<triangle> m_triangles;		// Triangle/Face list
 	std::vector<triangle> m_triFinal;		// Triangle/Face list
-	
-	std::string part = "Main"; 
 
+
+	int startPoint = 9999999999; // arbitrary large value
+	int finalPoint = 0;
 	int current = 0;
 	int  positions[8];
 	
