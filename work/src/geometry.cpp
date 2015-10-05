@@ -157,13 +157,26 @@ void Geometry::readOBJ(string filename) {
 //-------------------------------------------------------------
 // Uses the same index for a point as the index for the points normal
 //-------------------------------------------------------------
-void Geometry::createNormals(){//vector<triangle> *faces, vector<comp308::vec3> *normals) {
+void Geometry::createNormals(){
 
 	// Initialize normals
 	for (unsigned int p = 0; p < m_points.size() -1; p++){
 		vec3 init(0,0,0);
 		m_normals.push_back(init);
 	}
+	
+	// make a list of a list so each normal has a list of values, ie all the face normals from the faces
+	// add each face normal to the list for the correct normal
+	// find the median of each list and set that to be the normal value (maybe normalise it first?)
+	
+	vector<vector<vec3>> normMed;
+	
+	// Initialize normals
+	for (unsigned int p = 0; p < m_points.size() -1; p++){
+		vec3 init(0,0,0);
+		m_normals.push_back(init);
+	}
+	
 
 	vec3 norm, a, b, c;
 
