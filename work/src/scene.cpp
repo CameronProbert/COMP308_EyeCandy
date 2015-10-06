@@ -103,13 +103,13 @@ Scene::Scene(int s) {
 void Scene::setCorneaSpecular(){
   g_eyeCornea->setAmbient(0.0f, 0.0f, 0.0f, 0.0f);
   g_eyeCornea->setDiffuse(0.0f, 0.0f, 0.0f, 0.0f);
-  g_eyeCornea->setSpecular(1.f, 1.f, 1.f, 1.0f);
+  g_eyeCornea->setSpecular(1.f, 1.f, 1.f, 0.6f);
   g_eyeCornea->setShininess(0.188);
 }
 
 void Scene::setCorneaDiffuse(){
-  g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725, 0.1f);
-  g_eyeCornea->setDiffuse(1, 0.829, 0.829, 0.1f);
+  g_eyeCornea->setAmbient(0.25, 0.20725, 0.20725, 0.05f);
+  g_eyeCornea->setDiffuse(1, 0.829, 0.829, 0.05f);
   g_eyeCornea->setSpecular(0.0f, 0.0f, 0.0f, 0.0f);
   g_eyeCornea->setShininess(0.188);
 }
@@ -162,7 +162,7 @@ void Scene::enableTextures(){
   glActiveTexture(GL_TEXTURE0);
 }
 
-void Scene::renderScene(){
+void Scene::renderScene(bool g_shader){
 	glPushMatrix(); 
 
     // rotate the eye to follow the mouse
@@ -170,7 +170,7 @@ void Scene::renderScene(){
 		glRotatef(degrees(thetaY),0,1,0); // Rotate scene around y axis
 		
 		// Render the eye
-		renderEye();
+		renderEye(g_shader);
 
 
 	glPopMatrix();
@@ -189,8 +189,24 @@ void setMaterial(material m){
 	glMaterialf(GL_FRONT, GL_SHININESS, m.shininess * 128.0);
 }
 
+void Scene::enableShader(bool g_shader){
+  if (g_shader){
+    // Set our sampler (texture0) to use GL_TEXTURE0 as the source
+    glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
+    // Turns on using the texture in the shader
+    glUniform1i(1, true);
+  }
+}
 
-void Scene::renderEye(){
+void Scene::disableShader(bool g_shader){
+  if (g_shader){
+    // Turns off using the texture in the shader
+    glUniform1i(1, false);
+  }
+}
+
+
+void Scene::renderEye(bool g_shader){
 
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
@@ -198,11 +214,13 @@ void Scene::renderEye(){
 		setMaterial(g_eyeMain->m_material);
 		g_eyeMain->renderGeometry();
 		
+                enableShader(g_shader);
 		enableTextures();
 		glBindTexture(GL_TEXTURE_2D, g_irisTexture);
 		setMaterial(g_eyeIris->m_material);
 		g_eyeIris->renderGeometry();
 		glDisable(GL_TEXTURE_2D);
+                disableShader(g_shader);
 		
 		setMaterial(g_eyeLens->m_material);
 		g_eyeLens->renderGeometry();

@@ -55,7 +55,7 @@ float g_zoomFactor = 1.0;
 //
 GLuint g_texture = 0;
 GLuint g_shader = 0;
-bool g_useShader = false;
+bool g_useShader = true;
 
 // Scene loader and drawer
 //
@@ -76,8 +76,8 @@ void initLight() {
 	// Enable all lighting
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
-	glEnable(GL_LIGHT2);
-	glEnable(GL_LIGHT3);
+	//glEnable(GL_LIGHT2);
+	//glEnable(GL_LIGHT3);
 }
 
 
@@ -106,7 +106,7 @@ void initTexture() {
 
 
 void initShader() {
-	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi.frag");
+	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi3.frag");
 }
 
 
@@ -227,7 +227,7 @@ void draw() {
 	if (!g_useShader) {
 
 
-		g_scene->renderScene();
+		g_scene->renderScene(g_shader);
 
 
 
@@ -238,10 +238,8 @@ void draw() {
 		// Use the shader we made
 		glUseProgram(g_shader);
 
-		// Set our sampler (texture0) to use GL_TEXTURE0 as the source
-		glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
 
-		g_scene->renderScene();
+		g_scene->renderScene(g_shader);
 
 		// Unbind our shader
 		glUseProgram(0);
