@@ -74,7 +74,7 @@ int currentColour = HAZEL;
 Scene::Scene(int s) {
 	shader = s;
   
-  initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
+  	initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
   
 	g_eyeMain = new Geometry("../work/res/assets/eyeFull.obj", "Main"); 
 	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
@@ -159,7 +159,12 @@ void Scene::enableTextures(){
   // Use Texture as the color
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // GL_MODULATE can be replaced with GL_REPLACE
   // Set the location for binding the texture
-  glActiveTexture(GL_TEXTURE0);
+  glActiveTexture(GL_TEXTURE1);
+  // Bind the texture
+  glBindTexture(GL_TEXTURE_2D, g_irisTexture);
+
+  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
+  glUniform1i(glGetUniformLocation(shader, "texture0"), 1);
 }
 
 void Scene::renderScene(bool g_shader){
@@ -190,19 +195,21 @@ void setMaterial(material m){
 }
 
 void Scene::enableShader(bool g_shader){
-  if (g_shader){
+  //if (g_shader){
     // Set our sampler (texture0) to use GL_TEXTURE0 as the source
-    glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
+    glUniform1i(glGetUniformLocation(g_shader, "texture0"), 1);
     // Turns on using the texture in the shader
-    glUniform1i(1, true);
-  }
+    glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_TRUE);
+    //glUniform1i(1, true);
+  //}
 }
 
 void Scene::disableShader(bool g_shader){
-  if (g_shader){
+  //if (g_shader){
     // Turns off using the texture in the shader
-    glUniform1i(1, false);
-  }
+    glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_FALSE);
+    //glUniform1i(1, false);
+  //}
 }
 
 
@@ -211,32 +218,43 @@ void Scene::renderEye(bool g_shader){
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
 		
-		setMaterial(g_eyeMain->m_material);
-		g_eyeMain->renderGeometry();
+		////// Main Eye //////
+		glPushMatrix(); 
+			setMaterial(g_eyeMain->m_material);
+			g_eyeMain->renderGeometry();
+		glPopMatrix();
 		
-                enableShader(g_shader);
-		enableTextures();
-		glBindTexture(GL_TEXTURE_2D, g_irisTexture);
-		setMaterial(g_eyeIris->m_material);
-		g_eyeIris->renderGeometry();
-		glDisable(GL_TEXTURE_2D);
-                disableShader(g_shader);
+		////// Iris //////
+		glPushMatrix();
+			setMaterial(g_eyeIris->m_material);
+			enableTextures();
+			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_TRUE);
+			g_eyeIris->renderGeometry();
+			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_FALSE);
+			glDisable(GL_TEXTURE_2D);
+        glPopMatrix();
 		
-		setMaterial(g_eyeLens->m_material);
-		g_eyeLens->renderGeometry();
-		
-		glEnable(GL_BLEND);
-                setCorneaDiffuse();
-		setMaterial(g_eyeCornea->m_material);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDepthMask(0);
-		//shaderManager.UseStockShader(GLT_SHADER_IDENTITY, g_eyeCornea->m_material);
-		g_eyeCornea->renderGeometry();
-		glDepthMask(1);
-                setCorneaSpecular();
-                setMaterial(g_eyeCornea->m_material);
-                g_eyeCornea->renderGeometry();
-		glDisable(GL_BLEND);
+		////// Lens //////
+		glPushMatrix();
+			setMaterial(g_eyeLens->m_material);
+			g_eyeLens->renderGeometry();
+        glPopMatrix();
+
+		////// Cornea //////
+		glPushMatrix();
+			glEnable(GL_BLEND);
+            setCorneaDiffuse();
+			setMaterial(g_eyeCornea->m_material);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDepthMask(0);
+			//shaderManager.UseStockShader(GLT_SHADER_IDENTITY, g_eyeCornea->m_material);
+			g_eyeCornea->renderGeometry();
+			glDepthMask(1);
+            setCorneaSpecular();
+            setMaterial(g_eyeCornea->m_material);
+            g_eyeCornea->renderGeometry();
+			glDisable(GL_BLEND);
+		glPopMatrix();
 		
 	glPopMatrix();
 }
