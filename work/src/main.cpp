@@ -76,8 +76,8 @@ void initLight() {
 	// Enable all lighting
 	//glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
-	glEnable(GL_LIGHT2);
-	glEnable(GL_LIGHT3);
+	//glEnable(GL_LIGHT2);
+	//glEnable(GL_LIGHT3);
 }
 
 
@@ -102,6 +102,38 @@ void initTexture() {
 	cout << tex.w << endl;
 }
 
+ char *faces[6] = {
+  "../work/res/textures/right.jpg",
+  "../work/res/textures/left.jpg",  
+  "../work/res/textures/top.jpg", 
+  "../work/res/textures/bottom.jpg", 
+  "../work/res/textures/back.jpg", 
+  "../work/res/textures/front.jpg" 
+};
+
+void initCubeMap(){
+
+	for(int i = 0; i < 6; i++){
+		image face(faces[i]);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, face.w, face.h, 0, GL_RGB, GL_UNSIGNED_BYTE, face.dataPointer());
+	}	
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT); // else GL_CLAMP
+  	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT); // else GL_CLAMP
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glEnable(GL_TEXTURE_GEN_R);
+
+	glEnable(GL_TEXTURE_CUBE_MAP); 
+}
 
 
 
@@ -138,8 +170,9 @@ float spot_dirX = 0.0;
 float spot_dirY = -1.0;
 float spot_dirZ = 0.0;
 
-
-
+float fresnelBias = 0.08;
+float fresnelScale = 0.9;
+float fresnelPower = 1.0;
 
 // Draw function
 //
@@ -156,13 +189,13 @@ void draw() {
 	setUpCamera();
 
 	///////////////////// Lighting ////////////////////////
-	float direction[]	  = {0.0f, 0.0f, 1.0f, 0.0f};
-	float diffintensity[] = {0.7f, 0.7f, 0.7f, 1.0f};
-	float ambient[]       = {0.2f, 0.2f, 0.2f, 1.0f};
+	// float direction[]	  = {0.0f, 0.0f, 1.0f, 0.0f};
+	// float diffintensity[] = {0.7f, 0.7f, 0.7f, 1.0f};
+	// float ambient[]       = {0.2f, 0.2f, 0.2f, 1.0f};
 
-	glLightfv(GL_LIGHT0, GL_POSITION, direction);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE,  diffintensity);
-	glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient);	
+	// glLightfv(GL_LIGHT0, GL_POSITION, direction);
+	// glLightfv(GL_LIGHT0, GL_DIFFUSE,  diffintensity);
+	// glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient);	
 
 	// Weak ambient light
 	float ambientColor[] = {0.4f, 0.4f, 0.4f, 1.0f};
@@ -219,7 +252,7 @@ void draw() {
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 
-
+	//glutSolidTorus(0.4, 0.9, 35, 35);
 
 
 	// Without shaders
@@ -240,6 +273,10 @@ void draw() {
 
 		// Set our sampler (texture0) to use GL_TEXTURE0 as the source
 		glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
+
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
 
 		g_scene->renderScene();
 
@@ -284,6 +321,7 @@ void reshape(int w, int h) {
 
 bool dir_trigger = true;
 
+
 // Keyboard callback
 // Called once per button state change
 //
@@ -291,6 +329,34 @@ void keyboardCallback(unsigned char key, int x, int y) {
 	//cout << "Keyboard Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
+
+	switch(key){
+		case 'q':
+			fresnelBias = max(0.0, fresnelBias - 0.02);
+			break;
+		case 'w':
+			fresnelBias = max(0.0, fresnelBias + 0.02);
+			break;
+		case 'a':
+			fresnelScale = max(0.0, fresnelScale - 0.02);
+			break;
+		case 's':
+			fresnelScale = max(0.0, fresnelScale + 0.02);
+			break;
+		case 'z':
+			fresnelPower = max(0.0, fresnelPower - 0.02);
+			break;
+		case 'x':
+			fresnelPower = min(1.0, fresnelPower + 0.02);
+			break;
+	}
+	cout << "fresnelBias: " << fresnelBias << endl;
+	cout << "fresnelScale: " << fresnelScale << endl;
+	cout << "fresnelPower: " << fresnelPower << endl;
+
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
 }
 
 
@@ -324,7 +390,7 @@ void mouseCallback(int button, int state, int x, int y) {
 // at least one mouse button has an active state
 // 
 void mouseMotionCallback(int x, int y) {
-	cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
+	//cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
 	float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/2.f));
@@ -383,6 +449,7 @@ int main(int argc, char **argv) {
 	initLight();
 	initShader();
 	initTexture();
+	initCubeMap();
 
 	// Create the scene including the geometry.
 	g_scene = new Scene(g_shader);

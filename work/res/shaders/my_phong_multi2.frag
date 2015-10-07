@@ -29,7 +29,7 @@ void main()
 
 	vec4 final = vec4 (0.0,0.0,0.0,0.0);
 
-	for(int light = 0; light < 5; light++){
+	for(int light = 1; light < 2; light++){
 
 
 
