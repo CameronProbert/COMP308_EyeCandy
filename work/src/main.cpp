@@ -55,7 +55,7 @@ float g_zoomFactor = 1.0;
 //
 GLuint g_texture = 0;
 GLuint g_shader = 0;
-bool g_useShader = false;
+bool g_useShader = true;
 
 // Scene loader and drawer
 //
@@ -74,7 +74,7 @@ void initLight() {
 
 
 	// Enable all lighting
-	//glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	//glEnable(GL_LIGHT2);
 	//glEnable(GL_LIGHT3);
@@ -138,7 +138,7 @@ void initCubeMap(){
 
 
 void initShader() {
-	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi.frag");
+	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi3.frag");
 }
 
 
@@ -189,27 +189,29 @@ void draw() {
 	setUpCamera();
 
 	///////////////////// Lighting ////////////////////////
-	// float direction[]	  = {0.0f, 0.0f, 1.0f, 0.0f};
-	// float diffintensity[] = {0.7f, 0.7f, 0.7f, 1.0f};
-	// float ambient[]       = {0.2f, 0.2f, 0.2f, 1.0f};
+
+	float direction[]	  = {0.0f, 0.0f, -1.0f, 0.0f};
+	float diffintensity[] = {0.0f, 0.0f, 0.0f, 1.0f};
+	float ambient[]       = {0.2f, 0.2f, 0.2f, 1.0f};
+
 
 	// glLightfv(GL_LIGHT0, GL_POSITION, direction);
 	// glLightfv(GL_LIGHT0, GL_DIFFUSE,  diffintensity);
 	// glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient);	
 
 	// Weak ambient light
-	float ambientColor[] = {0.4f, 0.4f, 0.4f, 1.0f};
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
+	//float ambientColor[] = {0.4f, 0.4f, 0.4f, 1.0f};
+	//glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
 
 	// Weak directional light
 	float directionalDiffuse[] = {0.8f, 0.8f, 0.8f, 1.0f};
 	float directionalSpecular[] = {0.8f, 0.8f, 0.8f, 1.0f};
 	float directionalAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
-	float directionalPos[] = {0.5f, 0.5f, 0.5f, 0.0f};
-	glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
+	float directionalPos[] = {0.4f, 0.4f, 1.0f, 0.0f};
+	//glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, directionalSpecular);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
-    glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
+  glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
 	
 	// Weak point light
 	//float pointDiffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
@@ -260,7 +262,7 @@ void draw() {
 	if (!g_useShader) {
 
 
-		g_scene->renderScene();
+		g_scene->renderScene(g_shader);
 
 
 
@@ -271,14 +273,14 @@ void draw() {
 		// Use the shader we made
 		glUseProgram(g_shader);
 
-		// Set our sampler (texture0) to use GL_TEXTURE0 as the source
-		glUniform1i(glGetUniformLocation(g_shader, "texture0"), 0);
 
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
 
-		g_scene->renderScene();
+
+		g_scene->renderScene(g_shader);
+
 
 		// Unbind our shader
 		glUseProgram(0);
@@ -349,6 +351,9 @@ void keyboardCallback(unsigned char key, int x, int y) {
 		case 'x':
 			fresnelPower = min(1.0, fresnelPower + 0.02);
 			break;
+		case 't':
+      		g_scene->setIrisColour();
+      		break;
 	}
 	cout << "fresnelBias: " << fresnelBias << endl;
 	cout << "fresnelScale: " << fresnelScale << endl;
@@ -390,12 +395,13 @@ void mouseCallback(int button, int state, int x, int y) {
 // at least one mouse button has an active state
 // 
 void mouseMotionCallback(int x, int y) {
-	//cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
-	// YOUR CODE GOES HERE
-	// ...
-	float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/2.f));
-  float thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/2.f));
-	g_scene->lookAt(thetaX, thetaY);
+  //cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
+  // YOUR CODE GOES HERE
+  // ...
+  float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/5.f));
+  float thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/5.f));
+  g_scene->lookAt(thetaX, thetaY);
+
 }
 
 
@@ -403,7 +409,7 @@ void mouseMotionCallback(int x, int y) {
 //Main program
 // 
 int main(int argc, char **argv) {
-
+  srand((unsigned)time(NULL)); 
 	if(argc != 1){
 		cout << "No arguments expected" << endl;
 		exit(EXIT_FAILURE);

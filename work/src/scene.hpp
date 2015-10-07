@@ -24,11 +24,18 @@ private:
   float thetaX;
   float thetaY;
   
-	void initTexture(std::string, GLuint *);
-	void renderEye();
+  void initTexture(std::string, GLuint *);
+  void renderEye(bool);
+  void enableTextures();
+  void enableShader(bool);
+  void disableShader(bool);
+  void setCorneaDiffuse();
+  void setCorneaSpecular();
 public:
-	Scene(int);
-	void renderScene();
-	void rotate();
+  Scene(int);
+  void renderScene(bool);
+  void rotate();
   void lookAt(float, float);
+  void setIrisColour(int);
+  void setIrisColour();
 };

@@ -17,16 +17,14 @@
 // Constant across both shaders
 uniform sampler2D texture0;
 uniform bool texture;
-uniform samplerCube env;
 
 // Values passed in from the vertex shader
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec2 vTextureCoord0;
-varying float refFactor;
 
 
-#define MAX_LIGHTS 2 
+#define MAX_LIGHTS 4 
 
 void main (void) 
 { 
@@ -35,8 +33,7 @@ void main (void)
    
    for (int i=1;i<MAX_LIGHTS;i++)
    {
-		vec3 L = normalize(gl_LightSource[i].position.xyz); // Directional light
-		//vec3 L = normalize(gl_LightSource[i].position.xyz - vPosition); // Other
+		vec3 L = normalize(gl_LightSource[i].position.xyz - vPosition); 
 		vec3 E = normalize(-vPosition); // we are in Eye Coordinates, so EyePos is (0,0,0) 
 		vec3 R = normalize(-reflect(L,N)); 
 
@@ -53,30 +50,19 @@ void main (void)
 			
 		if(texture){
 			finalColor += (Iamb + Idiff + Ispec) * texture2D(texture0, vTextureCoord0);
+			//finalColor += Iamb + ((texture2D(texture0, vTextureCoord0)) * Idiff) + Ispec;
 		}
 		else{
 			finalColor += Iamb + Idiff + Ispec;
-
 		}
    }
-
-   	vec3 I = normalize(vPosition); // Camera position
-    vec3 R = reflect(I, vNormal);
    
 	// write Total Color: 
 	if(texture){
 		gl_FragColor = finalColor; 
 	}
 	else{
-
-
-		vec4 empty = vec4(0.0,0.0,0.0, 0.0);
-		//gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
-
-		// Transparent for testing
-		gl_FragColor = mix(empty, textureCube(env, R), refFactor);
-
-		//gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
+		gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
 	}
    
 }

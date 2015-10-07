@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include "comp308.hpp"
 
@@ -33,9 +34,9 @@ struct triangle {
 };
 
 struct material {
-	float a[3]; //ambient
-	float d[3]; //diffuse
-	float s[3]; //specular
+	float a[4]; //ambient
+	float d[4]; //diffuse
+	float s[4]; //specular
 	float shininess = 0;
 };
 
@@ -47,17 +48,29 @@ private:
 	std::vector<comp308::vec3> m_points;	// Point list
 	std::vector<comp308::vec2> m_uvs;		// Texture Coordinate list
 	std::vector<comp308::vec3> m_normals;	// Normal list
+	std::vector<comp308::vec3> m_norMain;	// Normal list
+	std::vector<comp308::vec3> m_norIris;	// Normal list
+	std::vector<comp308::vec3> m_norPupil;	// Normal list
+	std::vector<comp308::vec3> m_norOther;	// Normal list
 	std::vector<triangle> m_triangles;		// Triangle/Face list
+	std::vector<triangle> m_triFinal;		// Triangle/Face list
 
+
+	int startPoint = std::numeric_limits<int>::max(); // arbitrary large value
+	int finalPoint = 0;
+	int current = 0;
+	
 	bool m_wireFrameOn = false;
+	std::string currentDraw;
 
 	// IDs for the display list to render
 	GLuint m_displayListPoly = 0; // DisplayList for Polygon
 	GLuint m_displayListWire = 0; // DisplayList for Wireframe
 
 	void readOBJ(std::string);
+	void copyFaces(std::vector<triangle> *, int, int);
 
-	void createNormals();
+	void createNormals();//std::vector<triangle>*, std::vector<comp308::vec3>*);
 
 	void createDisplayListPoly();
 	void createDisplayListWire();
@@ -66,14 +79,14 @@ public:
 	material m_material;
 
 
-	Geometry(std::string);
+	Geometry(std::string, std::string);
 	// ~GeometryManager();
 
 	void renderGeometry();
-	void toggleWireFrame();
-	void setAmbient(float a, float b, float c);
-	void setDiffuse(float a, float b, float c);
-	void setSpecular(float a, float b, float c);
+	
+	void setAmbient(float a, float b, float c, float d);
+	void setDiffuse(float a, float b, float c, float d);
+	void setSpecular(float a, float b, float c, float d);
 	void setShininess(float);
 	material getMat();
 

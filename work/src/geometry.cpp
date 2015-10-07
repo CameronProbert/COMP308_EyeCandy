@@ -27,12 +27,12 @@ using namespace std;
 using namespace comp308;
 
 
-Geometry::Geometry(string filename) {
+Geometry::Geometry(string filename, string t) {
+	currentDraw = t;
 	m_filename = filename;
 	readOBJ(filename);
 	if (m_triangles.size() > 0) {
-		createDisplayListPoly();
-		createDisplayListWire();
+		renderGeometry();
 	}
 }
 
@@ -129,11 +129,20 @@ void Geometry::readOBJ(string filename) {
 					tri.v[1] = verts[1];
 					tri.v[2] = verts[2];
 					m_triangles.push_back(tri);
+					current++;	
 				}
+			}
+			else if (mode == currentDraw){
+				startPoint = current;
+				cout << currentDraw << "----------------------------" << endl;
+			}
+			else if((currentDraw == "Main" && mode == "Iris") || (currentDraw == "Iris" && mode == "Cornea") || (currentDraw == "Cornea" && mode == "Lens")){
+			  finalPoint=current;
 			}
 		}
 	}
-
+	if(currentDraw == "Lens") finalPoint = m_triangles.size()-1;
+	
 	cout << "Reading OBJ file is DONE." << endl;
 	cout << m_points.size()-1 << " points" << endl;
 	cout << m_uvs.size()-1 << " uv coords" << endl;
@@ -148,13 +157,26 @@ void Geometry::readOBJ(string filename) {
 //-------------------------------------------------------------
 // Uses the same index for a point as the index for the points normal
 //-------------------------------------------------------------
-void Geometry::createNormals() {
+void Geometry::createNormals(){
 
 	// Initialize normals
 	for (unsigned int p = 0; p < m_points.size() -1; p++){
 		vec3 init(0,0,0);
 		m_normals.push_back(init);
 	}
+	
+	// make a list of a list so each normal has a list of values, ie all the face normals from the faces
+	// add each face normal to the list for the correct normal
+	// find the median of each list and set that to be the normal value (maybe normalise it first?)
+	
+	//vector<vector<vec3>> normMed;
+	
+	// Initialize normals
+	//for (unsigned int p = 0; p < m_points.size() -1; p++){
+	//	vec3 init(0,0,0);
+	//	m_normals.push_back(init);
+	//}
+	
 
 	vec3 norm, a, b, c;
 
@@ -187,24 +209,25 @@ void Geometry::createNormals() {
 	}
 
 	cout << m_normals.size()-1 << " normals created" << endl;
-
 }
 
-
-
-void Geometry::createDisplayListPoly() {
+void Geometry::renderGeometry() {
+	glShadeModel(GL_SMOOTH);
+	//glutSolidTeapot(5.0);
+	glCallList(m_displayListPoly);
+	
 	// Delete old list if there is one
 	if (m_displayListPoly) glDeleteLists(m_displayListPoly, 1);
 
 	// Create a new list
-	cout << "Creating Poly Geometry" << endl;
+	//cout << "Creating Poly Geometry" << endl;
 	m_displayListPoly = glGenLists(1);
 	glNewList(m_displayListPoly, GL_COMPILE);
-
+	
 
 	glBegin(GL_TRIANGLES);
 	// For each face
-	for(unsigned int i=0; i<m_triangles.size(); i++){
+	for(unsigned int i=startPoint; i<finalPoint; i++){
 		// For each vertex
 		for(int j=0; j<3; j++){
 
@@ -213,7 +236,7 @@ void Geometry::createDisplayListPoly() {
 			vec3 norm = m_normals[m_triangles[i].v[j].n];
 
 			glNormal3f(norm.x, norm.y, norm.z);
-			glTexCoord2f(uv.x * 5, uv.y * 5);
+			glTexCoord2f(uv.x, uv.y);
 			glVertex3f(vert.x, vert.y, vert.z);
 
 		}
@@ -225,79 +248,30 @@ void Geometry::createDisplayListPoly() {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glEndList();
-	cout << "Finished creating Poly Geometry" << endl;
+	//cout << "Finished creating Poly Geometry" << endl;
 }
 
 
 
-void Geometry::createDisplayListWire() {
-	// Delete old list if there is one
-	if (m_displayListWire) glDeleteLists(m_displayListWire, 1);
-
-
-	// Create a new list
-	cout << "Creating Wire Geometry" << endl;
-	m_displayListWire = glGenLists(1);
-	glNewList(m_displayListWire, GL_COMPILE);
-
-
-	glBegin(GL_TRIANGLES);
-	// For each face
-	for(unsigned int i=0; i<m_triangles.size(); i++){
-		// For each vertex
-		for(int j=0; j<3; j++){
-
-			vec3 vert = m_points[m_triangles[i].v[j].p];
-			//vec2 uv = m_uvs[m_triangles[i].v[j].t];
-			vec3 norm = m_normals[m_triangles[i].v[j].n];
-
-			glNormal3f(norm.x, norm.y, norm.z);
-			//glTexCoord2f(uv.x, uv.y);
-			glVertex3f(vert.x, vert.y, vert.z);
-		}
-	}
-
-	glEnd();
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glEndList();
-	cout << "Finished creating Wire Geometry" << endl;
+void Geometry::setAmbient(float a, float b, float c, float d){
+	m_material.a[0] = a; 
+	m_material.a[1] = b; 
+	m_material.a[2] = c;
+	m_material.a[3] = d;
 }
 
-
-void Geometry::renderGeometry() {
-	if (m_wireFrameOn) {
-
-		glShadeModel(GL_SMOOTH);
-		//glutWireTeapot(5.0);
-		glCallList(m_displayListWire);
-
-	} else {
-
-		glShadeModel(GL_SMOOTH);
-		//glutSolidTeapot(5.0);
-		glCallList(m_displayListPoly);
-
-	}
+void Geometry::setDiffuse(float a, float b, float c, float d){
+	m_material.d[0] = a; 
+	m_material.d[1] = b; 
+	m_material.d[2] = c;
+	m_material.d[3] = d;
 }
 
-
-void Geometry::toggleWireFrame() {
-	m_wireFrameOn = !m_wireFrameOn;
-}
-
-
-void Geometry::setAmbient(float a, float b, float c){
-	m_material.a[0] = a; m_material.a[1] = b; m_material.a[2] = c;
-}
-
-void Geometry::setDiffuse(float a, float b, float c){
-	m_material.d[0] = a; m_material.d[1] = b; m_material.d[2] = c;
-}
-
-void Geometry::setSpecular(float a, float b, float c){
-	m_material.s[0] = a; m_material.s[1] = b; m_material.s[2] = c;
+void Geometry::setSpecular(float a, float b, float c, float d){
+	m_material.s[0] = a; 
+	m_material.s[1] = b; 
+	m_material.s[2] = c;
+	m_material.s[3] = d;
 }
 
 void Geometry::setShininess(float s){
