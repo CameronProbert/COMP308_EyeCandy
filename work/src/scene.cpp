@@ -28,6 +28,10 @@ GLuint g_irisTexture = 0;
 // Reference to the shader
 GLuint shader = 0;
 
+// External lights shining on the eye
+// Made up of normalized direction (vec3) * strength (float)
+vector<vec3> lightDirs;
+
 enum {
   BROWN = 0,
   GREEN,
@@ -127,6 +131,16 @@ void Scene::setIrisColour(int index){
   cout << "Eye colour set to: " << colourNames[index] << endl;
 }
 
+void Scene::setLightDirections(vector<vec4> newLightDirs){
+  lightDirs.clear();
+  for (vec4 vec : newLightDirs){
+    vec3 direction = {vec[0], vec[1], vec[2]};
+    normalize(direction);
+    direction *= vec[3];
+    lightDirs.push_back(direction);
+  }
+}
+
 void Scene::setIrisColour(){
   //srand(time[0]);
   //int col = randInt(BROWN, WHITE);
@@ -212,9 +226,41 @@ void Scene::disableShader(bool g_shader){
   //}
 }
 
+float Scene::calculatePupilDilation(){
+  vec3 eyeRotation = {0,0,1}; // Eye facing forward initially
+  
+  // Do x rotation
+  mat3 xRot = {
+    {1, 0, 0},
+    {0, cos(thetaX), -sin(thetaX)},
+    {0, sin(thetaX), cos(thetaX)}
+  };
+  eyeRotation = xRot * eyeRotation;
+  
+  // Do y rotation
+  mat3 yRot = {
+    {cos(thetaY), 0, sin(thetaY)},
+    {0, 1, 0},
+    {-sin(thetaY), 0, cos(thetaY)}
+  };
+  eyeRotation = yRot * eyeRotation;
+  
+  normalize(eyeRotation);
+  float dotProd = 0;
+  //cout << "x: " << eyeRotation.x << " || y: " << eyeRotation.y << " || z: " << eyeRotation.z << endl;
+  for (vec3 vec : lightDirs){
+    dotProd += dot(eyeRotation, vec);
+  }
+  cout << "LightMagnitude: " << dotProd << endl;
+  return dotProd;
+}
+
 
 void Scene::renderEye(bool g_shader){
 
+  float dilation = calculatePupilDilation();
+  cout << "Dilation is: " << dilation << endl;
+  
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
 		
@@ -236,9 +282,10 @@ void Scene::renderEye(bool g_shader){
 		
 		////// Lens //////
 		glPushMatrix();
+		glTranslatef(0, 0, dilation*10);
 			setMaterial(g_eyeLens->m_material);
 			g_eyeLens->renderGeometry();
-        glPopMatrix();
+    glPopMatrix();
 
 		////// Cornea //////
 		glPushMatrix();

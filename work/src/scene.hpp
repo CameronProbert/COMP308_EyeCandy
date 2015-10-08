@@ -31,8 +31,10 @@ private:
   void disableShader(bool);
   void setCorneaDiffuse();
   void setCorneaSpecular();
+  float calculatePupilDilation();
 public:
   Scene(int);
+  void setLightDirections(std::vector<comp308::vec4>);
   void renderScene(bool);
   void rotate();
   void lookAt(float, float);

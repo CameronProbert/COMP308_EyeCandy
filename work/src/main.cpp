@@ -240,6 +240,18 @@ void startUp(){
 
 }
 
+void setLightDirections(vector<vec4> lightDirs){
+  g_scene->setLightDirections(lightDirs);
+}
+
+float calculateStrength(float diffuse[], float specular[]){
+  float diffuseStr = diffuse[0] + diffuse[1] + diffuse[2];
+  diffuseStr /= 3.f;
+  float specularStr = specular[0] + specular[1] + specular[2];
+  specularStr /= 3.f;
+  return 0.7f*diffuseStr + 0.3*specularStr;
+}
+
 
 // Draw function
 //
@@ -275,10 +287,10 @@ void draw() {
 	float directionalSpecular[] = {dir_specular, dir_specular, dir_specular, 1.0f};
 	float directionalAmbient[] = {dir_ambient, dir_ambient, dir_ambient, 1.0f};
 	float directionalPos[] = {0.8f, 0.8f, 0.8f, 0.0f};
-	//glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, directionalSpecular);
-  	glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
-  	glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
+  glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
 	
 	// Weak point light
 	//float pointDiffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
@@ -319,20 +331,29 @@ void draw() {
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
+	
 
 	if(!followMouse){
-  		g_scene->lookAt(rotation, 0.0);
-  		rotation += 0.02;
-  		if(rotation > 360){
-  			rotation = 0.0;
-  		}
-  		g_scene->lookAt(rotation, 0.0);
+  	g_scene->lookAt(rotation, 0.0);
+  	rotation += 0.02;
+  	if(rotation > 360){
+  		rotation = 0.0;
   	}
-  	else{
-  		g_scene->lookAt(thetaX, thetaY);
-  	}
+  	g_scene->lookAt(rotation, 0.0);
+  }
+  else{
+  	g_scene->lookAt(thetaX, thetaY);
+  }
 
+  vector<vec4> lightDirs;
+  vec4 directionalLight = {
+        directionalPos[0], 
+        directionalPos[1], 
+        directionalPos[2],
+        calculateStrength(directionalDiffuse, directionalSpecular)
+  };
+  lightDirs.push_back(directionalLight);
+	setLightDirections(lightDirs);
 
 	// Without shaders
 	//
