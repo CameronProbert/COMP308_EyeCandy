@@ -74,7 +74,7 @@ void initLight() {
 
 
 	// Enable all lighting
-	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	//glEnable(GL_LIGHT2);
 	//glEnable(GL_LIGHT3);
@@ -82,34 +82,65 @@ void initLight() {
 
 
 
-void initTexture() {
-	image tex("../work/res/textures/brick.jpg");
+// void initTexture() {
+// 	image tex("../work/res/textures/brick.jpg");
 
-	glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
-	glGenTextures(1, &g_texture); // Generate texture ID
-	glBindTexture(GL_TEXTURE_2D, g_texture); // Bind it as a 2D texture
+// 	glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
+// 	glGenTextures(1, &g_texture); // Generate texture ID
+// 	glBindTexture(GL_TEXTURE_2D, g_texture); // Bind it as a 2D texture
 	
-	// Setup sampling strategies
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// 	// Setup sampling strategies
+// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	// Finnaly, actually fill the data into our texture
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, tex.w, tex.h, tex.glFormat(), GL_UNSIGNED_BYTE, tex.dataPointer());
+// 	// Finnaly, actually fill the data into our texture
+// 	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, tex.w, tex.h, tex.glFormat(), GL_UNSIGNED_BYTE, tex.dataPointer());
 
-	cout << tex.w << endl;
-}
+// 	cout << tex.w << endl;
+// }
 
+//// Lake ////
+//  char *faces[6] = {
+//   "../work/res/textures/right.jpg",
+//   "../work/res/textures/left.jpg",  
+//   "../work/res/textures/top.jpg", 
+//   "../work/res/textures/bottom.jpg", 
+//   "../work/res/textures/back.jpg", 
+//   "../work/res/textures/front.jpg" 
+// };
+
+//// Saint Lazrus Church ////
  char *faces[6] = {
-  "../work/res/textures/right.jpg",
-  "../work/res/textures/left.jpg",  
-  "../work/res/textures/top.jpg", 
-  "../work/res/textures/bottom.jpg", 
-  "../work/res/textures/back.jpg", 
-  "../work/res/textures/front.jpg" 
+  "../work/res/textures/saintLazarusChurch/posx.jpg",
+  "../work/res/textures/saintLazarusChurch/negx.jpg",
+  "../work/res/textures/saintLazarusChurch/posy.jpg",
+  "../work/res/textures/saintLazarusChurch/negy.jpg",
+  "../work/res/textures/saintLazarusChurch/posz.jpg",
+  "../work/res/textures/saintLazarusChurch/negz.jpg",
 };
+
+//// Lancellotti Chapel ////
+//  char *faces[6] = {
+//   "../work/res/textures/LancellottiChapel/posx.jpg",
+//   "../work/res/textures/LancellottiChapel/negx.jpg",
+//   "../work/res/textures/LancellottiChapel/posy.jpg",
+//   "../work/res/textures/LancellottiChapel/negy.jpg",
+//   "../work/res/textures/LancellottiChapel/posz.jpg",
+//   "../work/res/textures/LancellottiChapel/negz.jpg",
+// };
+
+//// Niagra Falls ////
+//  char *faces[6] = {
+//   "../work/res/textures/NiagraFalls/posx.jpg",
+//   "../work/res/textures/NiagraFalls/negx.jpg",
+//   "../work/res/textures/NiagraFalls/posy.jpg",
+//   "../work/res/textures/NiagraFalls/negy.jpg",
+//   "../work/res/textures/NiagraFalls/posz.jpg",
+//   "../work/res/textures/NiagraFalls/negz.jpg",
+// };
 
 void initCubeMap(){
 
@@ -138,7 +169,7 @@ void initCubeMap(){
 
 
 void initShader() {
-	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi3.frag");
+	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi.frag");
 }
 
 
@@ -161,7 +192,6 @@ void setUpCamera() {
 }
 
 // Spotlight variables
-
 float spot_cut = 40.0;
 float spot_x = 0.0;
 float spot_y = 8.0;
@@ -170,9 +200,46 @@ float spot_dirX = 0.0;
 float spot_dirY = -1.0;
 float spot_dirZ = 0.0;
 
-float fresnelBias = 0.08;
-float fresnelScale = 0.9;
-float fresnelPower = 1.0;
+// Ambient Color
+float amb_color = 0.0; // 0.4
+
+// Directional Light Variables
+float dir_diffuse = 0.0; // 0.8
+float dir_specular = 0.0; // 0.8
+float dir_ambient = 0.0; // 0.4
+
+// Fresnel Variables
+float fresnelBias = 0.0; // 0.02
+float fresnelScale = 0.0; // 0.06
+float fresnelPower = 0.0; // 1.0
+
+// Eye Rotation
+float rotation = 0.0;
+bool followMouse = false;
+float thetaX;
+float thetaY;
+
+bool startUpSeq = true;
+int my_count = 0;
+
+void startUp(){
+	my_count += 1;
+	fresnelBias += 0.00004;
+	fresnelScale += 0.00012;
+	fresnelPower += 0.002;
+
+	dir_diffuse += 0.0016;
+	dir_specular += 0.0016;
+	dir_ambient += 0.0008;
+
+	amb_color += 0.0008;
+
+	if(my_count >= 499){
+		startUpSeq = false;
+	}
+
+}
+
 
 // Draw function
 //
@@ -200,18 +267,18 @@ void draw() {
 	// glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient);	
 
 	// Weak ambient light
-	//float ambientColor[] = {0.4f, 0.4f, 0.4f, 1.0f};
-	//glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
+	float ambientColor[] = {amb_color, amb_color, amb_color, 1.0f};
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
 
 	// Weak directional light
-	float directionalDiffuse[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float directionalSpecular[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float directionalAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
-	float directionalPos[] = {0.4f, 0.4f, 1.0f, 0.0f};
+	float directionalDiffuse[] = {dir_diffuse, dir_diffuse, dir_diffuse, 1.0f};
+	float directionalSpecular[] = {dir_specular, dir_specular, dir_specular, 1.0f};
+	float directionalAmbient[] = {dir_ambient, dir_ambient, dir_ambient, 1.0f};
+	float directionalPos[] = {0.8f, 0.8f, 0.8f, 0.0f};
 	//glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, directionalSpecular);
-  glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
-  glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
+  	glLightfv(GL_LIGHT1, GL_DIFFUSE, directionalDiffuse);
+  	glLightfv(GL_LIGHT1, GL_POSITION, directionalPos);
 	
 	// Weak point light
 	//float pointDiffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
@@ -254,7 +321,17 @@ void draw() {
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 
-	//glutSolidTorus(0.4, 0.9, 35, 35);
+	if(!followMouse){
+  		g_scene->lookAt(rotation, 0.0);
+  		rotation += 0.02;
+  		if(rotation > 360){
+  			rotation = 0.0;
+  		}
+  		g_scene->lookAt(rotation, 0.0);
+  	}
+  	else{
+  		g_scene->lookAt(thetaX, thetaY);
+  	}
 
 
 	// Without shaders
@@ -285,11 +362,7 @@ void draw() {
 		// Unbind our shader
 		glUseProgram(0);
 
-
-
-
 	}
-
 
 	// Disable flags for cleanup (optional)
 	glDisable(GL_DEPTH_TEST);
@@ -297,15 +370,16 @@ void draw() {
 	glDisable(GL_NORMALIZE);
 	glDisable(GL_COLOR_MATERIAL);
 
-	
-
-	
 
 	// Move the buffer we just drew to the front
 	glutSwapBuffers();
 
 	// Queue the next frame to be drawn straight away
 	glutPostRedisplay();
+
+	if(startUpSeq){
+		startUp();
+	}
 }
 
 
@@ -324,11 +398,12 @@ void reshape(int w, int h) {
 bool dir_trigger = true;
 
 
+
 // Keyboard callback
 // Called once per button state change
 //
 void keyboardCallback(unsigned char key, int x, int y) {
-	//cout << "Keyboard Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
+	cout << "Keyboard Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
 
@@ -337,13 +412,13 @@ void keyboardCallback(unsigned char key, int x, int y) {
 			fresnelBias = max(0.0, fresnelBias - 0.02);
 			break;
 		case 'w':
-			fresnelBias = max(0.0, fresnelBias + 0.02);
+			fresnelBias = min(1.0, fresnelBias + 0.02);
 			break;
 		case 'a':
 			fresnelScale = max(0.0, fresnelScale - 0.02);
 			break;
 		case 's':
-			fresnelScale = max(0.0, fresnelScale + 0.02);
+			fresnelScale = min(1.0, fresnelScale + 0.02);
 			break;
 		case 'z':
 			fresnelPower = max(0.0, fresnelPower - 0.02);
@@ -353,6 +428,10 @@ void keyboardCallback(unsigned char key, int x, int y) {
 			break;
 		case 't':
       		g_scene->setIrisColour();
+      		break;
+      	case 32:
+      		rotation = 0.0;
+      		followMouse = !followMouse;
       		break;
 	}
 	cout << "fresnelBias: " << fresnelBias << endl;
@@ -369,7 +448,7 @@ void keyboardCallback(unsigned char key, int x, int y) {
 // Called once per button state change
 //
 void specialCallback(int key, int x, int y) {
-	//cout << "Special Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
+	cout << "Special Callback :: key=" << key << ", x,y=(" << x << "," << y << ")" << endl;
 	// YOUR CODE GOES HERE
 	// ...
 }
@@ -398,10 +477,12 @@ void mouseMotionCallback(int x, int y) {
   //cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
   // YOUR CODE GOES HERE
   // ...
-  float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/5.f));
-  float thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/5.f));
-  g_scene->lookAt(thetaX, thetaY);
+	thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/5.f));
+	thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/5.f));
 
+	if(followMouse){
+		g_scene->lookAt(thetaX, thetaY);
+	}
 }
 
 
@@ -454,13 +535,12 @@ int main(int argc, char **argv) {
 
 	initLight();
 	initShader();
-	initTexture();
+	//initTexture();
 	initCubeMap();
 
 	// Create the scene including the geometry.
 	g_scene = new Scene(g_shader);
 	
-
 	// Loop required by GLUT
 	// This will not return until we tell GLUT to finish
 	glutMainLoop();

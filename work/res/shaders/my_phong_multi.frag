@@ -25,6 +25,7 @@ varying vec3 vPosition;
 varying vec2 vTextureCoord0;
 varying float refFactor;
 
+vec4 empty = vec4(0.0, 0.0, 0.0, 0.0);
 
 #define MAX_LIGHTS 2 
 
@@ -65,18 +66,24 @@ void main (void)
    
 	// write Total Color: 
 	if(texture){
-		gl_FragColor = finalColor; 
+
+		gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
+
+		// Transparent for testing
+		//gl_FragColor = mix(empty, textureCube(env, R), refFactor); 
+
+		// No reflection
+		//gl_FragColor = finalColor;
 	}
 	else{
 
-
-		vec4 empty = vec4(0.0,0.0,0.0, 0.0);
-		//gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
+		gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
 
 		// Transparent for testing
-		gl_FragColor = mix(empty, textureCube(env, R), refFactor);
+		//gl_FragColor = mix(empty, textureCube(env, R), refFactor);
 
-		//gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
+		// No reflection
+		//gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
 	}
    
 }
