@@ -1,1 +1,0 @@
-/bin/c++      CMakeFiles/FP.dir/main.cpp.o CMakeFiles/FP.dir/geometry.cpp.o CMakeFiles/FP.dir/scene.cpp.o  -o ../bin/FP -rdynamic /lib64/libglut.so ../bin/libglew.a ../bin/libstb.a /lib64/libXmu.so /lib64/libXi.so -lGLU -lGL -lGLU -lGL 
