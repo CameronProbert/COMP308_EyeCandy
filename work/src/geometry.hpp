@@ -74,6 +74,8 @@ private:
 
 	void createDisplayListPoly();
 	void createDisplayListWire();
+	
+	comp308::vec3 median(std::vector<comp308::vec3>*);
 
 public:
 	material m_material;

@@ -154,6 +154,14 @@ void Geometry::readOBJ(string filename) {
 	if (m_normals.size() <= 1) createNormals();
 }
 
+
+
+bool sortByX(const vec3 i, const vec3 j) { return i.x > j.x; }
+
+bool sortByY(const vec3 i, const vec3 j) { return i.y > j.y; }
+
+bool sortByZ(const vec3 i, const vec3 j) { return i.z > j.z; }
+
 //-------------------------------------------------------------
 // Uses the same index for a point as the index for the points normal
 //-------------------------------------------------------------
@@ -169,13 +177,13 @@ void Geometry::createNormals(){
 	// add each face normal to the list for the correct normal
 	// find the median of each list and set that to be the normal value (maybe normalise it first?)
 	
-	//vector<vector<vec3>> normMed;
+	vector<vector<vec3>> normMed (m_points.size());
 	
 	// Initialize normals
-	//for (unsigned int p = 0; p < m_points.size() -1; p++){
-	//	vec3 init(0,0,0);
-	//	m_normals.push_back(init);
-	//}
+	for (unsigned int p = 0; p < m_points.size() -1; p++){
+		vector<vec3> toPush (100);
+		normMed.push_back(toPush);
+	}
 	
 
 	vec3 norm, a, b, c;
@@ -197,6 +205,10 @@ void Geometry::createNormals(){
 
 			// Add the current face normal to the current normal for the vertex
 			m_normals[m_triangles[i].v[j].p] += norm;
+			
+			// Add the normal to the list of normals for that reference
+			normMed[m_triangles[i].v[j].p].push_back(norm);
+			//cout << m_triangles[i].v[j].p << endl;
 
 			// Make sure the vertex has a reference to its normal
 			m_triangles[i].v[j].n = m_triangles[i].v[j].p;
@@ -205,10 +217,114 @@ void Geometry::createNormals(){
 
 	// Normalize
 	for(unsigned n=0; n<m_normals.size(); n++){
-		m_normals[n]=normalize(m_normals[n]);
+		//m_normals[n]=normalize(m_normals[n]);
+		
+		vec3 med;
+		
+		vector<vec3> norms = normMed[n];
+		if(norms.size()!=0){
+		  
+		  float* x [2];
+		  float* y [2];
+		  float* z [2];
+		  vec3* all = &norms[0];
+		  
+		  sort(norms.begin(), norms.end(), sortByX);
+		  // sort in terms of x
+		  x[0] = &all[norms.size()/2].x;
+		  x[1] = &all[(norms.size()/2)-1].x;
+		  if(norms.size()%2 ==0){
+		    med.x = (*x[0] + *x[1])/2;
+		  }else{
+		    med.x = *x[0];
+		  }
+		
+		  sort(norms.begin(), norms.end(), sortByY);
+		  // sort in terms of y
+		  y[0] = &all[norms.size()/2].y;
+		  y[1] = &all[(norms.size()/2)-1].y;
+		  if(norms.size()%2 ==0){
+		    med.x = (*y[0] + *y[1])/2;
+		  }else{
+		    med.y = *y[0];
+		  }
+		  
+		  sort(norms.begin(), norms.end(), sortByZ);
+		  // sort in terms of z
+		  z[0] = &all[norms.size()/2].z;
+		  z[1] = &all[(norms.size()/2)-1].z;
+		  if(norms.size()%2 ==0){
+		    med.z = (*z[0] + *z[1])/2;
+		  }else{
+		    med.z = *z[0];
+		  }
+		  
+		  cout << med.x << "       printing x                   --------------" << endl; 
+		}
+		else{
+		  med.x = 0;
+		  med.y = 0;
+		  med.z = 0;		  
+		}
+		
+		m_normals[n] = med;
 	}
 
 	cout << m_normals.size()-1 << " normals created" << endl;
+}
+
+vec3 Geometry::median(vector<vec3> *norms){
+  int size = (int)norms->size();
+  int xList [size];
+  vector<int> yList (size);
+  vector<int> zList (size);  
+  
+  for(int n=0; n<norms->size(); n++){
+    xList[n] = (*norms)[n].x;
+    yList.push_back((*norms)[n].y);
+    zList.push_back((*norms)[n].z);
+    cout << xList[n] << "  " << yList[n] << " " << zList[n] << endl;
+  }
+  
+  //std::sort (xList.begin(), xList.begin()+xList.size());
+  //std::sort (yList.begin(), yList.begin()+yList.size());
+  //std::sort (zList.begin(), zList.begin()+zList.size());
+  
+  vec3 median;
+  
+  if(size==0){
+   // cout << " size in the median is " << norms.size() << endl;
+   median.x=0;
+   median.y=0;
+   median.z=0;
+   return median;
+  }
+  
+  /*for(int i=0; i<xList.size(); i++){
+   cout << xList[i] << endl; 
+    
+  }*/
+  
+  if(size%2 != 0){  
+    median.x = xList[size/2];
+    //cout << median.x << " :   median x" << endl;
+  }
+  else{ 
+    median.x = (xList[size/2] + xList[(size/2)-1])/2;
+  }
+  
+  if(yList.size()%2 != 0){  median.y = yList[yList.size()/2];}
+  else{ median.y = (yList[yList.size()/2] + yList[(yList.size()/2)-1])/2;}
+  
+  if(zList.size()%2 != 0){  median.z = zList[zList.size()/2];}
+  else{ median.z = (zList[zList.size()/2] + zList[(zList.size()/2)-1])/2;}
+  
+  //cout << median.x << " :   median x" << endl;
+  //cout << median.y << " :   median y" << endl;
+  //cout << median.z << " :   median z" << endl;
+  
+  return median;
+  
 }
 
 void Geometry::renderGeometry() {

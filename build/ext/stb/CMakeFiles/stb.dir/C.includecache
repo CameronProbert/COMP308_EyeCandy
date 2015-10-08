@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/u/students/burlinfran/git/COMP308_EyeCandy/work/ext/stb/stb.c
+stb_image.h
+/u/students/burlinfran/git/COMP308_EyeCandy/work/ext/stb/stb_image.h
+
+/u/students/burlinfran/git/COMP308_EyeCandy/work/ext/stb/stb_image.h
+stb_image.h
+/u/students/burlinfran/git/COMP308_EyeCandy/work/ext/stb/stb_image.h
+stdio.h
+-
+stdarg.h
+-
+stddef.h
+-
+stdlib.h
+-
+string.h
+-
+math.h
+-
+stdio.h
+-
+assert.h
+-
+stdint.h
+-
+emmintrin.h
+-
+intrin.h
+-
+arm_neon.h
+-
+
