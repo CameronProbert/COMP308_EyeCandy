@@ -200,14 +200,46 @@ float spot_dirX = 0.0;
 float spot_dirY = -1.0;
 float spot_dirZ = 0.0;
 
-// Fresnel Variables
-float fresnelBias = 0.02;
-float fresnelScale = 0.06;
-float fresnelPower = 1.0;
+// Ambient Color
+float amb_color = 0.0; // 0.4
 
-// Rotation of eye when not following mouse
+// Directional Light Variables
+float dir_diffuse = 0.0; // 0.8
+float dir_specular = 0.0; // 0.8
+float dir_ambient = 0.0; // 0.4
+
+// Fresnel Variables
+float fresnelBias = 0.0; // 0.02
+float fresnelScale = 0.0; // 0.06
+float fresnelPower = 0.0; // 1.0
+
+// Eye Rotation
 float rotation = 0.0;
-bool followMouse = true;
+bool followMouse = false;
+float thetaX;
+float thetaY;
+
+bool startUpSeq = true;
+int my_count = 0;
+
+void startUp(){
+	my_count += 1;
+	fresnelBias += 0.00004;
+	fresnelScale += 0.00012;
+	fresnelPower += 0.002;
+
+	dir_diffuse += 0.0016;
+	dir_specular += 0.0016;
+	dir_ambient += 0.0008;
+
+	amb_color += 0.0008;
+
+	if(my_count >= 499){
+		startUpSeq = false;
+	}
+
+}
+
 
 // Draw function
 //
@@ -235,13 +267,13 @@ void draw() {
 	// glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient);	
 
 	// Weak ambient light
-	float ambientColor[] = {0.4f, 0.4f, 0.4f, 1.0f};
+	float ambientColor[] = {amb_color, amb_color, amb_color, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
 
 	// Weak directional light
-	float directionalDiffuse[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float directionalSpecular[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float directionalAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
+	float directionalDiffuse[] = {dir_diffuse, dir_diffuse, dir_diffuse, 1.0f};
+	float directionalSpecular[] = {dir_specular, dir_specular, dir_specular, 1.0f};
+	float directionalAmbient[] = {dir_ambient, dir_ambient, dir_ambient, 1.0f};
 	float directionalPos[] = {0.8f, 0.8f, 0.8f, 0.0f};
 	//glLightfv(GL_LIGHT1, GL_AMBIENT, directionalAmbient);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, directionalSpecular);
@@ -297,6 +329,9 @@ void draw() {
   		}
   		g_scene->lookAt(rotation, 0.0);
   	}
+  	else{
+  		g_scene->lookAt(thetaX, thetaY);
+  	}
 
 
 	// Without shaders
@@ -327,11 +362,7 @@ void draw() {
 		// Unbind our shader
 		glUseProgram(0);
 
-
-
-
 	}
-
 
 	// Disable flags for cleanup (optional)
 	glDisable(GL_DEPTH_TEST);
@@ -339,15 +370,16 @@ void draw() {
 	glDisable(GL_NORMALIZE);
 	glDisable(GL_COLOR_MATERIAL);
 
-	
-
-	
 
 	// Move the buffer we just drew to the front
 	glutSwapBuffers();
 
 	// Queue the next frame to be drawn straight away
 	glutPostRedisplay();
+
+	if(startUpSeq){
+		startUp();
+	}
 }
 
 
@@ -398,6 +430,7 @@ void keyboardCallback(unsigned char key, int x, int y) {
       		g_scene->setIrisColour();
       		break;
       	case 32:
+      		rotation = 0.0;
       		followMouse = !followMouse;
       		break;
 	}
@@ -444,13 +477,12 @@ void mouseMotionCallback(int x, int y) {
   //cout << "Mouse Motion Callback :: x,y=(" << x << "," << y << ")" << endl;
   // YOUR CODE GOES HERE
   // ...
+	thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/5.f));
+	thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/5.f));
+
 	if(followMouse){
-		float thetaX = atan((x-g_winWidth/2.f)/(g_winWidth-g_winWidth/5.f));
-		float thetaY = atan((y-g_winHeight/2.f)/(g_winHeight-g_winHeight/5.f));
 		g_scene->lookAt(thetaX, thetaY);
 	}
-
-
 }
 
 
