@@ -531,6 +531,8 @@ float Scene::calculatePupilDilation(){
 
 void Scene::renderEye(bool g_shader){
 
+  glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_TRUE);
+
   float dilation = calculatePupilDilation();
   //cout << "Dilation is: " << dilation << endl;
   
@@ -564,7 +566,9 @@ void Scene::renderEye(bool g_shader){
 		  glScalef(1.3f, 1.3f, 1.3f);
 		  glTranslatef(0, 0, dilation*6-10);
 			setMaterial(g_eyeLens->m_material);
+      glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_FALSE);
 			g_eyeLens->renderGeometry();
+      glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_TRUE);
     glPopMatrix();
 
 		////// Cornea //////

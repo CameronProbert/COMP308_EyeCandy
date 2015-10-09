@@ -55,6 +55,7 @@ float g_zoomFactor = 1.0;
 //
 GLuint g_texture = 0;
 GLuint g_shader = 0;
+GLuint transparent_shader = 0;
 bool g_useShader = true;
 
 // Scene loader and drawer
@@ -81,73 +82,56 @@ void initLight() {
 }
 
 
-
-// void initTexture() {
-// 	image tex("../work/res/textures/brick.jpg");
-
-// 	glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
-// 	glGenTextures(1, &g_texture); // Generate texture ID
-// 	glBindTexture(GL_TEXTURE_2D, g_texture); // Bind it as a 2D texture
-	
-// 	// Setup sampling strategies
-// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-// 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-// 	// Finnaly, actually fill the data into our texture
-// 	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, tex.w, tex.h, tex.glFormat(), GL_UNSIGNED_BYTE, tex.dataPointer());
-
-// 	cout << tex.w << endl;
-// }
+int num_maps = 4;
 
 //// Lake ////
-//  char *faces[6] = {
-//   "../work/res/textures/right.jpg",
-//   "../work/res/textures/left.jpg",  
-//   "../work/res/textures/top.jpg", 
-//   "../work/res/textures/bottom.jpg", 
-//   "../work/res/textures/back.jpg", 
-//   "../work/res/textures/front.jpg" 
-// };
+ char *faces[24] = {
+  "../work/res/textures/right.jpg",
+  "../work/res/textures/left.jpg",  
+  "../work/res/textures/top.jpg", 
+  "../work/res/textures/bottom.jpg", 
+  "../work/res/textures/back.jpg", 
+  "../work/res/textures/front.jpg", 
 
 //// Saint Lazrus Church ////
- char *faces[6] = {
   "../work/res/textures/saintLazarusChurch/posx.jpg",
   "../work/res/textures/saintLazarusChurch/negx.jpg",
   "../work/res/textures/saintLazarusChurch/posy.jpg",
   "../work/res/textures/saintLazarusChurch/negy.jpg",
   "../work/res/textures/saintLazarusChurch/posz.jpg",
   "../work/res/textures/saintLazarusChurch/negz.jpg",
-};
 
 //// Lancellotti Chapel ////
-//  char *faces[6] = {
-//   "../work/res/textures/LancellottiChapel/posx.jpg",
-//   "../work/res/textures/LancellottiChapel/negx.jpg",
-//   "../work/res/textures/LancellottiChapel/posy.jpg",
-//   "../work/res/textures/LancellottiChapel/negy.jpg",
-//   "../work/res/textures/LancellottiChapel/posz.jpg",
-//   "../work/res/textures/LancellottiChapel/negz.jpg",
-// };
+  "../work/res/textures/LancellottiChapel/posx.jpg",
+  "../work/res/textures/LancellottiChapel/negx.jpg",
+  "../work/res/textures/LancellottiChapel/posy.jpg",
+  "../work/res/textures/LancellottiChapel/negy.jpg",
+  "../work/res/textures/LancellottiChapel/posz.jpg",
+  "../work/res/textures/LancellottiChapel/negz.jpg",
 
 //// Niagra Falls ////
-//  char *faces[6] = {
-//   "../work/res/textures/NiagraFalls/posx.jpg",
-//   "../work/res/textures/NiagraFalls/negx.jpg",
-//   "../work/res/textures/NiagraFalls/posy.jpg",
-//   "../work/res/textures/NiagraFalls/negy.jpg",
-//   "../work/res/textures/NiagraFalls/posz.jpg",
-//   "../work/res/textures/NiagraFalls/negz.jpg",
-// };
+  "../work/res/textures/NiagraFalls/posx.jpg",
+  "../work/res/textures/NiagraFalls/negx.jpg",
+  "../work/res/textures/NiagraFalls/posy.jpg",
+  "../work/res/textures/NiagraFalls/negy.jpg",
+  "../work/res/textures/NiagraFalls/posz.jpg",
+  "../work/res/textures/NiagraFalls/negz.jpg"
+};
+
+int map = 6;
+
+void map_images(){
+
+	for(int i = map; i < (map + 6); i++){
+		image face(faces[i]);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + (i - (map)), 0, GL_RGB, face.w, face.h, 0, GL_RGB, GL_UNSIGNED_BYTE, face.dataPointer());
+	}	
+}
+
 
 void initCubeMap(){
 
-	for(int i = 0; i < 6; i++){
-		image face(faces[i]);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, face.w, face.h, 0, GL_RGB, GL_UNSIGNED_BYTE, face.dataPointer());
-	}	
+	map_images();
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -170,6 +154,7 @@ void initCubeMap(){
 
 void initShader() {
 	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi.frag");
+	transparent_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/transparent.frag");
 }
 
 
@@ -257,8 +242,6 @@ float calculateStrength(float diffuse[], float specular[]){
 //
 void draw() {
 
-
-
 	// Enable flags for normal rendering
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
@@ -324,9 +307,6 @@ void draw() {
 	//glLightfv(GL_LIGHT3, GL_SPOT_EXPONENT, &spotExponent);
 
 
-
-
-
 	// Black background
 	glClearColor(0.0f,0.0f,0.0f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -359,8 +339,17 @@ void draw() {
 	//
 	if (!g_useShader) {
 
+		// Use the transparent shader we made
+		glUseProgram(transparent_shader);
 
-		g_scene->renderScene(g_shader);
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
+		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
+
+		g_scene->renderScene(transparent_shader);
+
+		// Unbind our shader
+		glUseProgram(0);
 
 
 
@@ -371,14 +360,11 @@ void draw() {
 		// Use the shader we made
 		glUseProgram(g_shader);
 
-
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
 		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
 
-
 		g_scene->renderScene(g_shader);
-
 
 		// Unbind our shader
 		glUseProgram(0);
@@ -453,6 +439,14 @@ void keyboardCallback(unsigned char key, int x, int y) {
       	case 32:
       		rotation = 0.0;
       		followMouse = !followMouse;
+      		break;
+      	case 'm':
+      		map += 6;
+      		if(map >= (num_maps * 6)){
+      			map = 0;
+      		}
+      		map_images();
+      		glutPostRedisplay();
       		break;
 	}
 	cout << "fresnelBias: " << fresnelBias << endl;
