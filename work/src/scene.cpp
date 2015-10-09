@@ -24,6 +24,8 @@ Geometry *g_eyeLens = nullptr;
 
 // Textures
 GLuint g_irisTexture = 0;
+GLuint g_allTextures [20];
+int g_currentTexture = 19;
 
 // Reference to the shader
 GLuint shader = 0;
@@ -75,10 +77,13 @@ float eyeColours[10][6] {
 int currentColour = HAZEL;
 
 
+
+
 Scene::Scene(int s) {
 	shader = s;
   
   initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
+  initialiseIrises();
   
 	g_eyeMain = new Geometry("../work/res/assets/eyeFull.obj", "Main"); 
 	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
@@ -116,6 +121,256 @@ void Scene::setCorneaDiffuse(){
   g_eyeCornea->setDiffuse(1, 0.829, 0.829, 0.05f);
   g_eyeCornea->setSpecular(0.0f, 0.0f, 0.0f, 0.0f);
   g_eyeCornea->setShininess(0.188);
+}
+
+int *** imageTo2D(image im){
+  cout << "imageTo2D..." << endl;
+  int width = im.w;
+  int height = im.h;
+  
+  int x = 0;
+  int y = 0;
+  int col = 0;
+  //cout << "im.data is: " << im.data[2]+0 << endl;
+  // Unpack image vector to 2 dimensions
+  
+  cout << "Creating int array..." << endl;
+  int *** unpackedTex = 0;
+  unpackedTex = new int**[width];
+  for (int w = 0; w < width; w++)
+  {
+    unpackedTex[w] = new int*[height];
+    for (int h = 0; h < height; h++)
+    {
+      unpackedTex[w][h] = new int[3];
+      for (int c = 0; c < 3; c++)
+      {
+       unpackedTex[w][h][c] = 0;
+      }
+    }
+  }
+  
+  cout << "Loading pixels into array..." << endl;
+  for (unsigned char pixel : im.data){
+    unpackedTex[x][y][col] = pixel+0;
+    //cout << "Pixel is: " << pixel+0 << endl;
+    
+    col++;
+    if (col >=3){
+      y++;
+      col = 0;
+      if (y >= height){
+        x++;
+        y = 0;
+      }
+    }
+  }
+  cout << "Returning unpacked texture..." << endl;
+  return unpackedTex;
+}
+
+vector<unsigned char> vectorFrom2D(int *** array, int xLen, int yLen, int zLen){
+  vector<unsigned char> vec;
+  for (int x = 0; x < xLen; x++){
+    for (int y = 0; y < yLen; y++){
+      for (int z = 0; z < zLen; z++){
+        vec.push_back(array[x][y][z]);
+      }
+    }
+  }
+  return vec;
+}
+
+/**
+  * Generates a texture for the iris with the given proportion
+  * approxTex is a black and white image used for finding the inside and outside edges of the iris
+  */
+GLuint Scene::generateTexture(image realTex, image approxTex, float proportion){
+  GLuint num; // Variable for the texture to be bound to and returned
+  cout << "Generating texture..." << endl;
+  
+  int width = approxTex.w;
+  int height = approxTex.h;
+  int centrePixelX = width/2;
+  int centrePixelY = height/2;
+  
+  int x = 0;
+  int y = 0;
+  
+  // Unpack image vectors to 2 dimensions + colour dimension
+  // Stored as x, y, colour
+  int *** unpackedApproxTex = imageTo2D(approxTex);
+  int *** unpackedRealTex = imageTo2D(realTex);
+  //int newTexture[width][height][3];
+  int *** newTexture = 0;
+  newTexture = new int**[width];
+  for (int w = 0; w < width; w++)
+  {
+    newTexture[w] = new int*[height];
+    for (int h = 0; h < height; h++)
+    {
+      newTexture[w][h] = new int[3];
+      for (int c = 0; c < 3; c++)
+      {
+       newTexture[w][h][c] = 0;
+      }
+    }
+  }
+  
+  // Go through every pixel
+  // If pixel is outside the iris then add it directly to the next image
+  // Otherwise find the angle from the centre the pixel is
+    // Step in that angle until you find the outside of iris pixel,
+    // Step in that angle until you find the inside of iris pixel,
+    // Find the pixel that should be placed into the current pixel
+  for (int i = 0; i < width; i++){
+    for (int j = 0; j < height; j++){
+      
+      if (unpackedApproxTex[x][y][0] < 50){
+        newTexture[x][y][0] = unpackedRealTex[x][y][0];
+        newTexture[x][y][1] = unpackedRealTex[x][y][1];
+        newTexture[x][y][2] = unpackedRealTex[x][y][2];
+      }
+      else {
+        // Find the angle
+        float angle = atan((centrePixelY-y)/((float)(centrePixelX-x))); // in Radians
+        cout << "Angle in radians: " << angle << endl;
+        angle = degrees(angle); // Degrees
+        cout << "Angle in degrees: " << angle << endl;
+        float prevColour = 0;
+        
+        int innerPixX = -1;
+        int innerPixY = -1;
+        int outerPixX = -1;
+        int outerPixY = -1;
+        
+        // Eastern Quadrant
+        if (angle > 45 && angle <= 135){
+          // First pass, find the inner and outer points of the iris
+          for (int xPixel = centrePixelX; xPixel < width; xPixel++){
+            int yPixel = (centrePixelX-xPixel) * tan(angle);
+            if (unpackedApproxTex[xPixel][yPixel][0] != prevColour){
+              if (innerPixX == -1){
+                innerPixX = xPixel;
+                innerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              } else if (outerPixX == -1){
+                outerPixX = xPixel;
+                outerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              }
+            }
+          }
+          // Second pass, find the pixel that goes into this index
+          int pixelX = abs(x - innerPixX)/abs(outerPixX - innerPixX);
+          int pixelY = abs(y - innerPixY)/abs(outerPixY - innerPixY);
+          newTexture[x][y][0] = unpackedRealTex[pixelX][pixelY][0];
+          newTexture[x][y][1] = unpackedRealTex[pixelX][pixelY][1];
+          newTexture[x][y][2] = unpackedRealTex[pixelX][pixelY][2];
+        }
+        
+        // Western Quadrant
+        else if (angle > 225 && angle <= 305){
+          // First pass, find the inner and outer points of the iris
+          for (int xPixel = centrePixelX; xPixel >= 0; xPixel--){
+            int yPixel = (centrePixelX-xPixel) * tan(angle);
+            if (unpackedApproxTex[xPixel][yPixel][0] != prevColour){
+              if (innerPixX == -1){
+                innerPixX = xPixel;
+                innerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              } else if (outerPixX == -1){
+                outerPixX = xPixel;
+                outerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              }
+            }
+          }
+          // Second pass, find the pixel that goes into this index
+          int pixelX = abs(x - innerPixX)/abs(outerPixX - innerPixX);
+          int pixelY = abs(y - innerPixY)/abs(outerPixY - innerPixY);
+          newTexture[x][y][0] = unpackedRealTex[pixelX][pixelY][0];
+          newTexture[x][y][1] = unpackedRealTex[pixelX][pixelY][1];
+          newTexture[x][y][2] = unpackedRealTex[pixelX][pixelY][2];
+        }
+        
+        // Southern Quadrant
+        else if (angle > 135 && angle <= 225){
+          // First pass, find the inner and outer points of the iris
+          for (int yPixel = centrePixelY; yPixel < height; yPixel++){
+            int xPixel = (centrePixelY-yPixel) * tan(angle);
+            if (unpackedApproxTex[xPixel][yPixel][0] != prevColour){
+              if (innerPixX == -1){
+                innerPixX = xPixel;
+                innerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              } else if (outerPixX == -1){
+                outerPixX = xPixel;
+                outerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              }
+            }
+          }
+          // Second pass, find the pixel that goes into this index
+          int pixelX = abs(x - innerPixX)/abs(outerPixX - innerPixX);
+          int pixelY = abs(y - innerPixY)/abs(outerPixY - innerPixY);
+          newTexture[x][y][0] = unpackedRealTex[pixelX][pixelY][0];
+          newTexture[x][y][1] = unpackedRealTex[pixelX][pixelY][1];
+          newTexture[x][y][2] = unpackedRealTex[pixelX][pixelY][2];
+        }
+        
+        // Northern Quadrant
+        else if (angle > 305 || angle <= 45){
+          // First pass, find the inner and outer points of the iris
+          for (int yPixel = centrePixelY; yPixel >= 0; yPixel--){
+            int xPixel = (centrePixelY-yPixel) * tan(angle);
+            if (unpackedApproxTex[xPixel][yPixel][0] != prevColour){
+              if (innerPixX == -1){
+                innerPixX = xPixel;
+                innerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              } else if (outerPixX == -1){
+                outerPixX = xPixel;
+                outerPixY = yPixel;
+                prevColour = unpackedApproxTex[xPixel][yPixel][0];
+              }
+            }
+          }
+          // Second pass, find the pixel that goes into this index
+          int pixelX = abs(x - innerPixX)/abs(outerPixX - innerPixX);
+          int pixelY = abs(y - innerPixY)/abs(outerPixY - innerPixY);
+          newTexture[x][y][0] = unpackedRealTex[pixelX][pixelY][0];
+          newTexture[x][y][1] = unpackedRealTex[pixelX][pixelY][1];
+          newTexture[x][y][2] = unpackedRealTex[pixelX][pixelY][2];
+        }
+      }
+      
+    }
+  }
+  
+  vector<unsigned char> tex = vectorFrom2D(newTexture, width, height, 3);
+  
+  // Pack image vector to 1 dimension
+  
+  initTexture(tex, &num, width, height); // Bind the texture
+  return num;
+}
+
+void Scene::initialiseIrises(){
+  int count = 1;
+  int maxCount = 20;
+  image approxTexture("../work/res/textures/irisApprox256.jpg");
+  image realTexture("../work/res/textures/irisBW256.jpg");
+  //cout << "approxTexture[0] is: " << approxTexture.data[2000] << endl;
+  //for( int i=0; i<approxTexture.data.size(); i++){
+  //  std::cout << "approxTexture: " << approxTexture.data[i]+0 << endl;
+  //}
+  g_allTextures[0] = g_irisTexture;
+  while (count < maxCount){
+    g_allTextures[count] = generateTexture(realTexture, approxTexture, ((float)count)/((float)maxCount));
+    cout << "Texture loaded into index: " << count << endl;
+    count++;
+  }
 }
 
 void Scene::setIrisColour(int index){
@@ -167,6 +422,23 @@ void Scene::initTexture(std::string fileName, GLuint *texName) {
 }
 
 
+void Scene::initTexture(vector<unsigned char> tex, GLuint *texName, int w, int h) {
+  glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
+  glGenTextures(1, texName); // Generate texture ID
+  glBindTexture(GL_TEXTURE_2D, *texName); // Bind it as a 2D texture
+       
+  // Setup sampling strategies
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  // Finally, actually fill the data into our texture
+  gluBuild2DMipmaps(GL_TEXTURE_2D, 3, w, h, GL_RGB, GL_UNSIGNED_BYTE, &tex[0]);
+}
+
+
 void Scene::enableTextures(){
   // Enable Drawing texures
   glEnable(GL_TEXTURE_2D);
@@ -175,7 +447,7 @@ void Scene::enableTextures(){
   // Set the location for binding the texture
   glActiveTexture(GL_TEXTURE1);
   // Bind the texture
-  glBindTexture(GL_TEXTURE_2D, g_irisTexture);
+  glBindTexture(GL_TEXTURE_2D, g_allTextures[g_currentTexture]);
 
   // Set our sampler (texture0) to use GL_TEXTURE0 as the source
   glUniform1i(glGetUniformLocation(shader, "texture0"), 1);
@@ -260,7 +532,7 @@ float Scene::calculatePupilDilation(){
 void Scene::renderEye(bool g_shader){
 
   float dilation = calculatePupilDilation();
-  cout << "Dilation is: " << dilation << endl;
+  //cout << "Dilation is: " << dilation << endl;
   
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
@@ -274,12 +546,18 @@ void Scene::renderEye(bool g_shader){
 		////// Iris //////
 		glPushMatrix();
 			setMaterial(g_eyeIris->m_material);
+			// TODO set correct texture
+			g_currentTexture = (int)(dilation*20);
+			if (g_currentTexture > 19){
+			  g_currentTexture = 19;
+			}
+      //cout << "Dilation is: " << g_currentTexture << endl;
 			enableTextures();
 			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_TRUE);
 			g_eyeIris->renderGeometry();
 			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_FALSE);
 			glDisable(GL_TEXTURE_2D);
-        glPopMatrix();
+    glPopMatrix();
 		
 		////// Lens //////
 		glPushMatrix();
