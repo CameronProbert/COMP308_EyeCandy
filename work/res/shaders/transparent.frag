@@ -17,9 +17,7 @@
 // Constant across both shaders
 uniform sampler2D texture0;
 uniform bool texture;
-uniform bool reflect_map;
 uniform samplerCube env;
-
 
 // Values passed in from the vertex shader
 varying vec3 vNormal;
@@ -69,20 +67,23 @@ void main (void)
 	// write Total Color: 
 	if(texture){
 
-		gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
+		//gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
+
+		// Transparent for testing
+		gl_FragColor = mix(empty, textureCube(env, R), refFactor); 
 
 		// No reflection
 		//gl_FragColor = finalColor;
 	}
 	else{
 
-		if(reflect_map){
-			gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
-		}
-		else{
-			// No reflection
-			gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
-		}
+		//gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
+
+		// Transparent for testing
+		gl_FragColor = mix(empty, textureCube(env, R), refFactor);
+
+		// No reflection
+		//gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
 	}
    
 }
