@@ -78,7 +78,7 @@ int currentColour = HAZEL;
 Scene::Scene(int s) {
 	shader = s;
   
-  	initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
+  initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
   
 	g_eyeMain = new Geometry("../work/res/assets/eyeFull.obj", "Main"); 
 	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
@@ -251,8 +251,9 @@ float Scene::calculatePupilDilation(){
   for (vec3 vec : lightDirs){
     dotProd += dot(eyeRotation, vec);
   }
-  cout << "LightMagnitude: " << dotProd << endl;
-  return dotProd;
+  //cout << "LightMagnitude: " << dotProd << endl;
+  
+  return abs(dotProd);
 }
 
 
@@ -282,7 +283,8 @@ void Scene::renderEye(bool g_shader){
 		
 		////// Lens //////
 		glPushMatrix();
-		glTranslatef(0, 0, dilation*10);
+		  glScalef(1.3f, 1.3f, 1.3f);
+		  glTranslatef(0, 0, dilation*6-10);
 			setMaterial(g_eyeLens->m_material);
 			g_eyeLens->renderGeometry();
     glPopMatrix();
