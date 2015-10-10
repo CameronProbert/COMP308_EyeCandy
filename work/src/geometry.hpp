@@ -31,6 +31,8 @@ struct vertex {
 
 struct triangle {
 	vertex v[3]; //requires 3 verticies
+	// add a face normal here
+	comp308::vec3 faceNormal;
 };
 
 struct material {
@@ -75,7 +77,6 @@ private:
 	void createDisplayListPoly();
 	void createDisplayListWire();
 	
-	comp308::vec3 median(std::vector<comp308::vec3>*);
 
 public:
 	material m_material;

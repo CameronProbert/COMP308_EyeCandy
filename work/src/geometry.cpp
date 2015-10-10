@@ -155,12 +155,18 @@ void Geometry::readOBJ(string filename) {
 }
 
 
+bool sortByX (vec3 i, vec3 j) {return (i.x < j.x);} 
+bool sortByY (vec3 i, vec3 j) {return (i.y < j.y);} 
+bool sortByZ (vec3 i, vec3 j) {return (i.z < j.z);} 
 
-bool sortByX(const vec3 i, const vec3 j) { return i.x > j.x; }
-
-bool sortByY(const vec3 i, const vec3 j) { return i.y > j.y; }
-
-bool sortByZ(const vec3 i, const vec3 j) { return i.z > j.z; }
+bool isUnique (vec3 p, vector<vec3> nei){
+ for (int i =0; i<nei.size(); i++){
+  if(p.x == nei[i].x && p.y == nei[i].y && p.z == nei[i].z){
+   return false;    
+  }
+ }  
+ return true;
+}
 
 //-------------------------------------------------------------
 // Uses the same index for a point as the index for the points normal
@@ -171,161 +177,102 @@ void Geometry::createNormals(){
 	for (unsigned int p = 0; p < m_points.size() -1; p++){
 		vec3 init(0,0,0);
 		m_normals.push_back(init);
+	}	
+	
+	// do the smoothing
+     for(int roll = 0; roll<0; roll++){
+	
+	for (int i=0; i<(int)m_triangles.size(); i++){
+	  // find all the neighbour vertices for each vertex
+	  
+	 
+	  for( int vertex = 0; vertex < 3; vertex++){
+	    vector<vec3> neighbours;
+	    //neighbours.push_back(m_points[m_triangles[i].v[vertex].p]);
+	  
+	    // for all the triangles
+	    for (int j=0; j<(int)m_triangles.size(); j++){
+	      // add the vectors that are neighbours
+	      bool flag0 = isUnique(m_points[m_triangles[j].v[0].p], neighbours);
+	      bool flag1 = isUnique(m_points[m_triangles[j].v[1].p], neighbours);
+	      bool flag2 = isUnique(m_points[m_triangles[j].v[2].p], neighbours);
+	      
+	      bool add = false;
+	      if(m_triangles[j].v[0].p == m_triangles[i].v[vertex].p || m_triangles[j].v[1].p == m_triangles[i].v[vertex].p || m_triangles[j].v[2].p == m_triangles[i].v[vertex].p){
+		add = true;
+	      }
+	      if(add){
+		if(flag0){
+		  neighbours.push_back(m_points[m_triangles[j].v[0].p]);
+		}
+		if(flag1){
+		  neighbours.push_back(m_points[m_triangles[j].v[1].p]);
+		}
+		if(flag2){
+		  neighbours.push_back(m_points[m_triangles[j].v[2].p]);
+		}
+		
+	      }
+	    }
+	    //cout << "got here 2" << endl;
+	  
+	    vec3 sum;
+	    // go through all the neighbours
+	    for(int n =0; n<neighbours.size(); n++){
+	      sum = sum + neighbours[n];
+	    }
+	    // that vertex is now equal to the sum divided by the number of neighbours
+	    vec3 newVer = sum;
+	    newVer.x = newVer.x/neighbours.size();
+	    newVer.y = newVer.y/neighbours.size();
+	    newVer.z = newVer.z/neighbours.size();
+	    
+	    //cout << newVer.x << " x " << newVer.y << " y " << newVer.z << " z " << endl;
+	    m_points[m_triangles[i].v[vertex].p] = newVer;
+	    //cout << "got here 3" << endl;
+	  
+	  }
 	}
-	
-	// make a list of a list so each normal has a list of values, ie all the face normals from the faces
-	// add each face normal to the list for the correct normal
-	// find the median of each list and set that to be the normal value (maybe normalise it first?)
-	
-	vector<vector<vec3>> normMed (m_points.size());
-	
-	// Initialize normals
-	for (unsigned int p = 0; p < m_points.size() -1; p++){
-		vector<vec3> toPush (100);
-		normMed.push_back(toPush);
-	}
-	
-
-	vec3 norm, a, b, c;
+      }
+      
+      // do edge smoothing on the normals
+      
+     vec3 norm, a, b, c;
 
 	// For each face.
-	for(unsigned int i=0; i<m_triangles.size(); i++){
+	for(int i=0; i<m_triangles.size(); i++){
 
 		a = m_points[m_triangles[i].v[0].p];
 		b = m_points[m_triangles[i].v[1].p];
 		c = m_points[m_triangles[i].v[2].p];
 
-
 		// Calculate face normal
-		norm = normalize(cross((b - a),(c - a)));
-
+		if(length(cross((b - a),(c - a)))!=0) norm = normalize(cross((b - a),(c - a)));
 
 		// For each vertex
 		for(int j=0; j<3; j++){
 
 			// Add the current face normal to the current normal for the vertex
 			m_normals[m_triangles[i].v[j].p] += norm;
-			
-			// Add the normal to the list of normals for that reference
-			normMed[m_triangles[i].v[j].p].push_back(norm);
-			//cout << m_triangles[i].v[j].p << endl;
 
 			// Make sure the vertex has a reference to its normal
 			m_triangles[i].v[j].n = m_triangles[i].v[j].p;
 		}
 	}
+	
 
 	// Normalize
-	for(unsigned n=0; n<m_normals.size(); n++){
-		//m_normals[n]=normalize(m_normals[n]);
-		
-		vec3 med;
-		
-		vector<vec3> norms = normMed[n];
-		if(norms.size()!=0){
-		  
-		  float* x [2];
-		  float* y [2];
-		  float* z [2];
-		  vec3* all = &norms[0];
-		  
-		  sort(norms.begin(), norms.end(), sortByX);
-		  // sort in terms of x
-		  x[0] = &all[norms.size()/2].x;
-		  x[1] = &all[(norms.size()/2)-1].x;
-		  if(norms.size()%2 ==0){
-		    med.x = (*x[0] + *x[1])/2;
-		  }else{
-		    med.x = *x[0];
-		  }
-		
-		  sort(norms.begin(), norms.end(), sortByY);
-		  // sort in terms of y
-		  y[0] = &all[norms.size()/2].y;
-		  y[1] = &all[(norms.size()/2)-1].y;
-		  if(norms.size()%2 ==0){
-		    med.x = (*y[0] + *y[1])/2;
-		  }else{
-		    med.y = *y[0];
-		  }
-		  
-		  sort(norms.begin(), norms.end(), sortByZ);
-		  // sort in terms of z
-		  z[0] = &all[norms.size()/2].z;
-		  z[1] = &all[(norms.size()/2)-1].z;
-		  if(norms.size()%2 ==0){
-		    med.z = (*z[0] + *z[1])/2;
-		  }else{
-		    med.z = *z[0];
-		  }
-		  
-		  cout << med.x << "       printing x                   --------------" << endl; 
-		}
-		else{
-		  med.x = 0;
-		  med.y = 0;
-		  med.z = 0;		  
-		}
-		
-		m_normals[n] = med;
+	for(int n=0; n<m_normals.size(); n++){
+	    if(length(m_normals[n])!=0){
+		m_normals[n]=normalize(m_normals[n]);
+	    }
 	}
+      
 
-	cout << m_normals.size()-1 << " normals created" << endl;
+      cout << m_normals.size()-1 << " normals created" << endl;
 }
 
-vec3 Geometry::median(vector<vec3> *norms){
-  int size = (int)norms->size();
-  int xList [size];
-  vector<int> yList (size);
-  vector<int> zList (size);  
-  
-  for(int n=0; n<norms->size(); n++){
-    xList[n] = (*norms)[n].x;
-    yList.push_back((*norms)[n].y);
-    zList.push_back((*norms)[n].z);
-    cout << xList[n] << "  " << yList[n] << " " << zList[n] << endl;
-  }
-  
-  //std::sort (xList.begin(), xList.begin()+xList.size());
-  //std::sort (yList.begin(), yList.begin()+yList.size());
-  //std::sort (zList.begin(), zList.begin()+zList.size());
-  
-  vec3 median;
-  
-  if(size==0){
-   // cout << " size in the median is " << norms.size() << endl;
-   median.x=0;
-   median.y=0;
-   median.z=0;
-   return median;
-  }
-  
-  /*for(int i=0; i<xList.size(); i++){
-   cout << xList[i] << endl; 
-    
-  }*/
-  
-  if(size%2 != 0){  
-    median.x = xList[size/2];
-    //cout << median.x << " :   median x" << endl;
-  }
-  else{ 
-    median.x = (xList[size/2] + xList[(size/2)-1])/2;
-  }
-  
-  if(yList.size()%2 != 0){  median.y = yList[yList.size()/2];}
-  else{ median.y = (yList[yList.size()/2] + yList[(yList.size()/2)-1])/2;}
-  
-  if(zList.size()%2 != 0){  median.z = zList[zList.size()/2];}
-  else{ median.z = (zList[zList.size()/2] + zList[(zList.size()/2)-1])/2;}
-  
-  //cout << median.x << " :   median x" << endl;
-  //cout << median.y << " :   median y" << endl;
-  //cout << median.z << " :   median z" << endl;
-  
-  return median;
-  
-}
+
 
 void Geometry::renderGeometry() {
 	glShadeModel(GL_SMOOTH);
@@ -345,6 +292,7 @@ void Geometry::renderGeometry() {
 	// For each face
 	for(unsigned int i=startPoint; i<finalPoint; i++){
 		// For each vertex
+		//vec3 norm = m_triangles[i].faceNormal;
 		for(int j=0; j<3; j++){
 
 			vec3 vert = m_points[m_triangles[i].v[j].p];
@@ -357,6 +305,7 @@ void Geometry::renderGeometry() {
 
 		}
 	}
+	//cout << finalPoint << " the final point of " << currentDraw << endl;
 
 
 	glEnd();
@@ -397,3 +346,4 @@ void Geometry::setShininess(float s){
 material Geometry::getMat(){
 	return m_material;
 }
+ 
