@@ -25,14 +25,19 @@ private:
   float thetaY;
   
   void initTexture(std::string, GLuint *);
+  void initTexture(std::vector<unsigned char>, GLuint *, int, int);
   void renderEye(bool);
   void enableTextures();
   void enableShader(bool);
   void disableShader(bool);
   void setCorneaDiffuse();
   void setCorneaSpecular();
+  float calculatePupilDilation();
+  void initialiseIrises();
+  GLuint generateTexture(image realTex, image approxTex, float proportion);
 public:
   Scene(int);
+  void setLightDirections(std::vector<comp308::vec4>);
   void renderScene(bool);
   void rotate();
   void lookAt(float, float);

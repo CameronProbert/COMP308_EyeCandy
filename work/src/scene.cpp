@@ -23,10 +23,21 @@ Geometry *g_eyeCornea = nullptr;
 Geometry *g_eyeLens = nullptr;
 
 // Textures
+const int NUM_TEXTURES = 50;
+const float NOISE_STRENGTH = 40;
+
 GLuint g_irisTexture = 0;
+GLuint g_allTextures [NUM_TEXTURES];
+int g_currentTexture = NUM_TEXTURES-1;
+
+vector<vector<unsigned char>> textures;
 
 // Reference to the shader
 GLuint shader = 0;
+
+// External lights shining on the eye
+// Made up of normalized direction (vec3) * strength (float)
+vector<vec3> lightDirs;
 
 enum {
   BROWN = 0,
@@ -68,13 +79,16 @@ float eyeColours[10][6] {
   {170.0f, 170.0f, 170.0f, 1.0f, 0.15, 0.1}
 };
 
-int currentColour = HAZEL;
+int currentColour = WHITE;
+
+
 
 
 Scene::Scene(int s) {
 	shader = s;
   
-  	initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
+  initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
+  initialiseIrises();
   
 	g_eyeMain = new Geometry("../work/res/assets/eyeFull.obj", "Main"); 
 	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
@@ -114,6 +128,121 @@ void Scene::setCorneaDiffuse(){
   g_eyeCornea->setShininess(0.188);
 }
 
+int *** imageTo2D(image im, bool bnw){
+  //cout << "imageTo2D..." << endl;
+  int width = im.w;
+  int height = im.h;
+  
+  int x = 0;
+  int y = 0;
+  int col = 0;
+  //cout << "im.data is: " << im.data[2]+0 << endl;
+  // Unpack image vector to 2 dimensions
+  
+  //cout << "Creating int array..." << endl;
+  int *** unpackedTex = 0;
+  unpackedTex = new int**[width];
+  for (int w = 0; w < width; w++)
+  {
+    unpackedTex[w] = new int*[height];
+    for (int h = 0; h < height; h++)
+    {
+      unpackedTex[w][h] = new int[3];
+      for (int c = 0; c < 3; c++)
+      {
+       unpackedTex[w][h][c] = 0;
+      }
+    }
+  }
+  
+  //cout << "Loading pixels into array..." << endl;
+  for (unsigned char pixel : im.data){
+    if (bnw){
+      if (pixel+0 < 100){
+        unpackedTex[x][y][col] = 0;
+      } else {
+        unpackedTex[x][y][col] = 255;
+      }
+    } else {
+      unpackedTex[x][y][col] = pixel+0;
+    }
+    if (unpackedTex[x][y][col] > 0)
+      //cout << "Pixel is: " << unpackedTex[x][y][col] << endl;
+    
+    col++;
+    if (col >=3){
+      y++;
+      col = 0;
+      if (y >= height){
+        x++;
+        y = 0;
+      }
+    }
+  }
+  //cout << "Returning unpacked texture..." << endl;
+  return unpackedTex;
+}
+
+vector<unsigned char> vectorFrom2D(int *** array, int xLen, int yLen, int zLen){
+  vector<unsigned char> vec;
+  for (int x = 0; x < xLen; x++){
+    for (int y = 0; y < yLen; y++){
+      for (int z = 0; z < zLen; z++){
+        vec.push_back(array[x][y][z]);
+      }
+    }
+  }
+  return vec;
+}
+
+/**
+  * Generates a texture for the iris with the given proportion
+  * approxTex is a black and white image used for finding the inside and outside edges of the iris
+  */
+GLuint Scene::generateTexture(image realTex, image approxTex, float proportion){
+  GLuint num; // Variable for the texture to be bound to and returned
+  //cout << "Generating texture..." << endl;
+  
+  int width = approxTex.w;
+  int height = approxTex.h;
+  int centrePixelX = width/2;
+  int centrePixelY = height/2;
+  
+  vector<unsigned char> demoTex;
+  for (int i = 0; i < realTex.data.size(); i+=3){
+    int range = NOISE_STRENGTH*proportion*8+1;
+    //cout << "range : " << range << endl;
+    int modifier = (int)(rand() % range - range/2);
+    //cout << "modifier : " << modifier << endl;
+    int col = realTex.data[i] + 0.5*(NUM_TEXTURES-(proportion*NUM_TEXTURES));
+    if (col < 0) col = 0;
+    if (col > 255) col = 255;
+    int colNeg = realTex.data[i] - 0.5*(NUM_TEXTURES-(proportion*NUM_TEXTURES));
+    if (colNeg < 0) colNeg = 0;
+    if (colNeg > 255) colNeg = 255;
+    
+    demoTex.push_back(col);
+    demoTex.push_back(colNeg);
+    demoTex.push_back(colNeg);
+  }
+  
+  initTexture(demoTex, &num, width, height); // Bind the texture
+  return num;
+}
+
+void Scene::initialiseIrises(){
+  int count = 0;
+  int maxCount = NUM_TEXTURES;
+  image approxTexture("../work/res/textures/irisApprox256.jpg");
+  image realTexture("../work/res/textures/irisBW256.jpg");
+  g_allTextures[0] = g_irisTexture;
+  while (count < maxCount){
+    g_allTextures[count] = generateTexture(realTexture, approxTexture, ((float)count)/((float)maxCount));
+    //cout << "Texture loaded into index: " << count << endl;
+    count++;
+  }
+}
+
 void Scene::setIrisColour(int index){
   float red = eyeColours[index][0]/255.f;
   float green = eyeColours[index][1]/255.f;
@@ -127,9 +256,17 @@ void Scene::setIrisColour(int index){
   cout << "Eye colour set to: " << colourNames[index] << endl;
 }
 
+void Scene::setLightDirections(vector<vec4> newLightDirs){
+  lightDirs.clear();
+  for (vec4 vec : newLightDirs){
+    vec3 direction = {vec[0], vec[1], vec[2]};
+    normalize(direction);
+    direction *= vec[3];
+    lightDirs.push_back(direction);
+  }
+}
+
 void Scene::setIrisColour(){
-  //srand(time[0]);
-  //int col = randInt(BROWN, WHITE);
   int col = rand() % WHITE;
   setIrisColour(col);
 }
@@ -153,6 +290,23 @@ void Scene::initTexture(std::string fileName, GLuint *texName) {
 }
 
 
+void Scene::initTexture(vector<unsigned char> tex, GLuint *texName, int w, int h) {
+  glActiveTexture(GL_TEXTURE0); // Use slot 0, need to use GL_TEXTURE1 ... etc if using more than one texture PER OBJECT
+  glGenTextures(1, texName); // Generate texture ID
+  glBindTexture(GL_TEXTURE_2D, *texName); // Bind it as a 2D texture
+       
+  // Setup sampling strategies
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  // Finally, actually fill the data into our texture
+  gluBuild2DMipmaps(GL_TEXTURE_2D, 3, w, h, GL_RGB, GL_UNSIGNED_BYTE, &tex[0]);
+}
+
+
 void Scene::enableTextures(){
   // Enable Drawing texures
   glEnable(GL_TEXTURE_2D);
@@ -161,7 +315,7 @@ void Scene::enableTextures(){
   // Set the location for binding the texture
   glActiveTexture(GL_TEXTURE1);
   // Bind the texture
-  glBindTexture(GL_TEXTURE_2D, g_irisTexture);
+  glBindTexture(GL_TEXTURE_2D, g_allTextures[g_currentTexture]);
 
   // Set our sampler (texture0) to use GL_TEXTURE0 as the source
   glUniform1i(glGetUniformLocation(shader, "texture0"), 1);
@@ -212,9 +366,44 @@ void Scene::disableShader(bool g_shader){
   //}
 }
 
+float Scene::calculatePupilDilation(){
+  vec3 eyeRotation = {0,0,1}; // Eye facing forward initially
+  
+  // Do x rotation
+  mat3 xRot = {
+    {1, 0, 0},
+    {0, cos(thetaX), -sin(thetaX)},
+    {0, sin(thetaX), cos(thetaX)}
+  };
+  eyeRotation = xRot * eyeRotation;
+  
+  // Do y rotation
+  mat3 yRot = {
+    {cos(thetaY), 0, sin(thetaY)},
+    {0, 1, 0},
+    {-sin(thetaY), 0, cos(thetaY)}
+  };
+  eyeRotation = yRot * eyeRotation;
+  
+  normalize(eyeRotation);
+  float dotProd = 0;
+  //cout << "x: " << eyeRotation.x << " || y: " << eyeRotation.y << " || z: " << eyeRotation.z << endl;
+  for (vec3 vec : lightDirs){
+    dotProd += dot(eyeRotation, vec);
+  }
+  //cout << "LightMagnitude: " << dotProd << endl;
+  
+  return abs(dotProd);
+}
+
 
 void Scene::renderEye(bool g_shader){
 
+  glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_TRUE);
+
+  float dilation = calculatePupilDilation();
+  //cout << "Dilation is: " << dilation << endl;
+  
 	glPushMatrix(); 
 		glScalef(0.1,0.1,0.1);
 		
@@ -227,18 +416,27 @@ void Scene::renderEye(bool g_shader){
 		////// Iris //////
 		glPushMatrix();
 			setMaterial(g_eyeIris->m_material);
+			g_currentTexture = (int)(dilation*NUM_TEXTURES);
+			if (g_currentTexture > NUM_TEXTURES-1){
+			  g_currentTexture = NUM_TEXTURES-1;
+			}
+      //cout << "Dilation is: " << g_currentTexture << endl;
 			enableTextures();
 			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_TRUE);
 			g_eyeIris->renderGeometry();
 			glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_FALSE);
 			glDisable(GL_TEXTURE_2D);
-        glPopMatrix();
+    glPopMatrix();
 		
 		////// Lens //////
 		glPushMatrix();
+		  glScalef(1.3f, 1.3f, 1.3f);
+		  glTranslatef(0, 0, dilation*6-10);
 			setMaterial(g_eyeLens->m_material);
+      glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_FALSE);
 			g_eyeLens->renderGeometry();
-        glPopMatrix();
+      glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_TRUE);
+    glPopMatrix();
 
 		////// Cornea //////
 		glPushMatrix();
