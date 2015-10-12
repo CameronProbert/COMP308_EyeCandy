@@ -72,7 +72,10 @@ private:
 	void readOBJ(std::string);
 	void copyFaces(std::vector<triangle> *, int, int);
 
-	void createNormals();//std::vector<triangle>*, std::vector<comp308::vec3>*);
+	void createNormals();
+	
+	void createNormalsMean();
+	void createNormalsMedian();
 
 	void createDisplayListPoly();
 	void createDisplayListWire();

@@ -168,19 +168,57 @@ bool isUnique (vec3 p, vector<vec3> nei){
  return true;
 }
 
-//-------------------------------------------------------------
-// Uses the same index for a point as the index for the points normal
-//-------------------------------------------------------------
-void Geometry::createNormals(){
-
+void Geometry::createNormals() {
 	// Initialize normals
-	for (unsigned int p = 0; p < m_points.size() -1; p++){
+	for (int p = 0; p < m_points.size() -1; p++){
 		vec3 init(0,0,0);
 		m_normals.push_back(init);
-	}	
+	}
+
+	vec3 norm, a, b, c;
+
+	// For each face.
+	for(int i=0; i<m_triangles.size(); i++){
+
+		a = m_points[m_triangles[i].v[0].p];
+		b = m_points[m_triangles[i].v[1].p];
+		c = m_points[m_triangles[i].v[2].p];
+
+		// Calculate face normal
+		if(length(cross((b - a),(c - a)))!=0) norm = normalize(cross((b - a),(c - a)));
+
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			// Add the current face normal to the current normal for the vertex
+			m_normals[m_triangles[i].v[j].p] += norm;
+
+			// Make sure the vertex has a reference to its normal
+			m_triangles[i].v[j].n = m_triangles[i].v[j].p;
+		}
+	}
+	
+
+	// Normalize
+	for(int n=0; n<m_normals.size(); n++){
+	    if(length(m_normals[n])!=0){
+		m_normals[n]=normalize(m_normals[n]);
+	    }
+	}
+
+	cout << m_normals.size() << " normals created" << endl;
+
+}
+
+void Geometry::createNormalsMean() {
+	// Initialize normals
+	for (int p = 0; p < m_points.size() -1; p++){
+		vec3 init(0,0,0);
+		m_normals.push_back(init);
+	}
 	
 	// do the smoothing
-     for(int roll = 0; roll<0; roll++){
+     for(int roll = 0; roll<3; roll++){
 	
 	for (int i=0; i<(int)m_triangles.size(); i++){
 	  // find all the neighbour vertices for each vertex
@@ -226,6 +264,120 @@ void Geometry::createNormals(){
 	    newVer.x = newVer.x/neighbours.size();
 	    newVer.y = newVer.y/neighbours.size();
 	    newVer.z = newVer.z/neighbours.size();
+	    
+	    //cout << newVer.x << " x " << newVer.y << " y " << newVer.z << " z " << endl;
+	    m_points[m_triangles[i].v[vertex].p] = newVer;
+	    //cout << "got here 3" << endl;
+	  
+	  }
+	}
+      }
+
+	vec3 norm, a, b, c;
+
+	// For each face.
+	for(int i=0; i<m_triangles.size(); i++){
+
+		a = m_points[m_triangles[i].v[0].p];
+		b = m_points[m_triangles[i].v[1].p];
+		c = m_points[m_triangles[i].v[2].p];
+
+		// Calculate face normal
+		if(length(cross((b - a),(c - a)))!=0) norm = normalize(cross((b - a),(c - a)));
+
+		// For each vertex
+		for(int j=0; j<3; j++){
+
+			// Add the current face normal to the current normal for the vertex
+			m_normals[m_triangles[i].v[j].p] += norm;
+
+			// Make sure the vertex has a reference to its normal
+			m_triangles[i].v[j].n = m_triangles[i].v[j].p;
+		}
+	}
+	
+
+	// Normalize
+	for(int n=0; n<m_normals.size(); n++){
+	    if(length(m_normals[n])!=0){
+		m_normals[n]=normalize(m_normals[n]);
+	    }
+	}
+
+	cout << m_normals.size() << " normals created" << endl;
+
+}
+
+//-------------------------------------------------------------
+// Uses the same index for a point as the index for the points normal
+//-------------------------------------------------------------
+void Geometry::createNormalsMedian(){
+
+	// Initialize normals
+	for (unsigned int p = 0; p < m_points.size() -1; p++){
+		vec3 init(0,0,0);
+		m_normals.push_back(init);
+	}	
+	
+	// do the smoothing
+     for(int roll = 0; roll<1; roll++){
+	
+	for (int i=0; i<(int)m_triangles.size(); i++){
+	  // find all the neighbour vertices for each vertex
+	  
+	 
+	  for( int vertex = 0; vertex < 3; vertex++){
+	    vector<vec3> neighbours;
+	    //neighbours.push_back(m_points[m_triangles[i].v[vertex].p]);
+	  
+	    // for all the triangles
+	    for (int j=0; j<(int)m_triangles.size(); j++){
+	      // add the vectors that are neighbours
+	      bool flag0 = isUnique(m_points[m_triangles[j].v[0].p], neighbours);
+	      bool flag1 = isUnique(m_points[m_triangles[j].v[1].p], neighbours);
+	      bool flag2 = isUnique(m_points[m_triangles[j].v[2].p], neighbours);
+	      
+	      bool add = false;
+	      if(m_triangles[j].v[0].p == m_triangles[i].v[vertex].p || m_triangles[j].v[1].p == m_triangles[i].v[vertex].p || m_triangles[j].v[2].p == m_triangles[i].v[vertex].p){
+		add = true;
+	      }
+	      if(add){
+		if(flag0 && m_triangles[j].v[0].p != m_triangles[i].v[vertex].p ){
+		  neighbours.push_back(m_points[m_triangles[j].v[0].p]);
+		}
+		if(flag1 && m_triangles[j].v[1].p != m_triangles[i].v[vertex].p){
+		  neighbours.push_back(m_points[m_triangles[j].v[1].p]);
+		}
+		if(flag2 && m_triangles[j].v[2].p != m_triangles[i].v[vertex].p){
+		  neighbours.push_back(m_points[m_triangles[j].v[2].p]);
+		}
+		
+	      }
+	    }
+	    //cout << "got here 2" << endl;
+	   vec3 newVer;
+	   std::sort ( neighbours.begin(), neighbours.end(), sortByX );
+	   if((neighbours.size()%2) !=0 ){
+	      newVer.x = neighbours[neighbours.size()/2].x;
+	   }
+	   else {
+	      newVer.x = (neighbours[neighbours.size()/2].x + neighbours[neighbours.size()/2-1].x)/2;
+	   }
+	   std::sort ( neighbours.begin(), neighbours.end(), sortByY );
+	   if((neighbours.size()%2) !=0 ){
+	      newVer.y = neighbours[neighbours.size()/2].y;
+	   }
+	   else {
+	      newVer.y = (neighbours[neighbours.size()/2].y + neighbours[neighbours.size()/2-1].y)/2;
+	   }
+	   std::sort ( neighbours.begin(), neighbours.end(), sortByZ );
+	   if((neighbours.size()%2) !=0 ){
+	      newVer.z = neighbours[neighbours.size()/2].z;
+	   }
+	   else {
+	      newVer.z = (neighbours[neighbours.size()/2].z + neighbours[neighbours.size()/2-1].z)/2;
+	   }
+	    
 	    
 	    //cout << newVer.x << " x " << newVer.y << " y " << newVer.z << " z " << endl;
 	    m_points[m_triangles[i].v[vertex].p] = newVer;
