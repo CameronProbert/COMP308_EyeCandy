@@ -27,7 +27,9 @@ private:
   void initTexture(std::string, GLuint *);
   void initTexture(std::vector<unsigned char>, GLuint *, int, int);
   void renderEye(bool);
+  void renderSphere(bool);
   void enableTextures();
+  void enableTextures(GLuint);
   void enableShader(bool);
   void disableShader(bool);
   void setCorneaDiffuse();
@@ -43,4 +45,5 @@ public:
   void lookAt(float, float);
   void setIrisColour(int);
   void setIrisColour();
+  void toggleEye();
 };

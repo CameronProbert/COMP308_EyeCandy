@@ -193,6 +193,10 @@ float dir_diffuse = 0.0; // 0.8
 float dir_specular = 0.0; // 0.8
 float dir_ambient = 0.0; // 0.4
 
+// Bias, Scale, Power
+float def_fresnel[3] = {0.02, 0.06, 1.0};
+float max_fresnel[3] = {0.0, 1.0, 1.0};
+
 // Fresnel Variables
 float fresnelBias = 0.0; // 0.02
 float fresnelScale = 0.0; // 0.06
@@ -204,7 +208,7 @@ bool followMouse = false;
 float thetaX;
 float thetaY;
 
-bool startUpSeq = true;
+bool startUpSeq = false;
 int my_count = 0;
 
 void startUp(){
@@ -335,41 +339,25 @@ void draw() {
   lightDirs.push_back(directionalLight);
 	setLightDirections(lightDirs);
 
-	// Without shaders
-	//
-	if (!g_useShader) {
-
-		// Use the transparent shader we made
-		glUseProgram(transparent_shader);
-
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
-
-		g_scene->renderScene(transparent_shader);
-
-		// Unbind our shader
-		glUseProgram(0);
 
 
 
-	// With shaders (no lighting)
-	//
-	} else {
+	// Use the shader we made
+	glUseProgram(g_shader);
 
-		// Use the shader we made
-		glUseProgram(g_shader);
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
+	glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
 
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelBias"), fresnelBias);
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelScale"), fresnelScale);
-		glUniform1f(glGetUniformLocation(g_shader, "fresnelPower"), fresnelPower);
+	g_scene->renderScene(g_shader);
 
-		g_scene->renderScene(g_shader);
+	// Unbind our shader
+	glUseProgram(0);
 
-		// Unbind our shader
-		glUseProgram(0);
+	
 
-	}
+
+
 
 	// Disable flags for cleanup (optional)
 	glDisable(GL_DEPTH_TEST);
@@ -436,6 +424,9 @@ void keyboardCallback(unsigned char key, int x, int y) {
 		case 't':
       		g_scene->setIrisColour();
       		break;
+      	case 'g':
+      		startUpSeq = true;
+      		break;
       	case 32:
       		rotation = 0.0;
       		followMouse = !followMouse;
@@ -468,7 +459,7 @@ void specialCallback(int key, int x, int y) {
 	// ...
 }
 
-
+bool eye = true;
 // Mouse Button Callback function
 // Called once per button state change
 // 
@@ -478,9 +469,27 @@ void mouseCallback(int button, int state, int x, int y) {
 	// ...
 	switch(button){
 		case 2: // right mouse button
-			if (state==0)
-				g_useShader = !g_useShader;
+			if (state==0){
+				eye = !eye;
+
+				if(eye){
+					map = 6;
+					fresnelBias = def_fresnel[0];
+					fresnelScale = def_fresnel[1];
+					fresnelPower = def_fresnel[2];
+				}
+				else{
+					map = 0;
+					fresnelBias = max_fresnel[0];
+					fresnelScale = max_fresnel[1];
+					fresnelPower = max_fresnel[2];
+				}
+				map_images();
+				g_scene->toggleEye();
+
 			break;
+			}
+				
 	}
 }
 

@@ -9,6 +9,7 @@ SET(headers
 	"imageLoader.hpp"
 	"shaderLoader.hpp"
 	"geometry.hpp"
+	"sphereGeometry.hpp"
 	"scene.hpp"
 )
 
@@ -17,6 +18,7 @@ SET(headers
 SET(sources
 	"main.cpp"
 	"geometry.cpp"
+	"sphereGeometry.cpp"
 	"scene.cpp"
 )
 

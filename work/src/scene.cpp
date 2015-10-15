@@ -9,6 +9,7 @@
 #include "comp308.hpp"
 #include "scene.hpp"
 #include "geometry.hpp"
+#include "sphereGeometry.hpp"
 #include "imageLoader.hpp"
 #include "shaderLoader.hpp"
 
@@ -21,12 +22,17 @@ Geometry *g_eyeMain = nullptr;
 Geometry *g_eyeIris = nullptr;
 Geometry *g_eyeCornea = nullptr;
 Geometry *g_eyeLens = nullptr;
+SphereGeometry *g_sphere = nullptr;
+
+// Render eye or sphere
+bool g_renderEye = true;
 
 // Textures
 const int NUM_TEXTURES = 50;
 const float NOISE_STRENGTH = 40;
 
 GLuint g_irisTexture = 0;
+GLuint g_mainTexture = 0;
 GLuint g_allTextures [NUM_TEXTURES];
 int g_currentTexture = NUM_TEXTURES-1;
 
@@ -82,11 +88,10 @@ float eyeColours[10][6] {
 int currentColour = WHITE;
 
 
-
-
 Scene::Scene(int s) {
 	shader = s;
   
+  initTexture("../work/res/textures/v.jpg", &g_mainTexture);
   initTexture("../work/res/textures/irisBW256.jpg", &g_irisTexture);
   initialiseIrises();
   
@@ -94,6 +99,7 @@ Scene::Scene(int s) {
 	g_eyeIris = new Geometry("../work/res/assets/eyeFull.obj", "Iris"); 
 	g_eyeLens = new Geometry("../work/res/assets/eyeFull.obj", "Lens"); 
 	g_eyeCornea = new Geometry("../work/res/assets/eyeFull.obj", "Cornea"); 
+  g_sphere = new SphereGeometry("../work/res/assets/teapot.obj"); 
 	
 	g_eyeMain->setAmbient(0.25, 0.20725, 0.20725, 1.f);
 	g_eyeMain->setDiffuse(1, 0.829, 0.829, 1.f);
@@ -112,6 +118,16 @@ Scene::Scene(int s) {
 	g_eyeCornea->setDiffuse(1, 0.829, 0.829, 0.1f);
 	g_eyeCornea->setSpecular(1.f, 1.f, 1.f, 1.0f);
 	g_eyeCornea->setShininess(0.188);
+
+  g_sphere->setAmbient(0.0, 0.0, 0.0);
+  g_sphere->setDiffuse(0.01, 0.01, 0.01);
+  g_sphere->setSpecular(0.5, 0.5, 0.5);
+  g_sphere->setShininess(0.25);
+
+  // g_sphere->setAmbient(0.25, 0.20725, 0.20725);
+  // g_sphere->setDiffuse(1, 0.829, 0.829);
+  // g_sphere->setSpecular(0.296648, 0.296648, 0.296648);
+  // g_sphere->setShininess(0.088);
 }
 
 void Scene::setCorneaSpecular(){
@@ -321,6 +337,20 @@ void Scene::enableTextures(){
   glUniform1i(glGetUniformLocation(shader, "texture0"), 1);
 }
 
+void Scene::enableTextures(GLuint texName){
+  // Enable Drawing texures
+  glEnable(GL_TEXTURE_2D);
+  // Use Texture as the color
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // GL_MODULATE can be replaced with GL_REPLACE
+  // Set the location for binding the texture
+  glActiveTexture(GL_TEXTURE1);
+  // Bind the texture
+  glBindTexture(GL_TEXTURE_2D, texName);
+
+  // Set our sampler (texture0) to use GL_TEXTURE0 as the source
+  glUniform1i(glGetUniformLocation(shader, "texture0"), 1);
+}
+
 void Scene::renderScene(bool g_shader){
 	glPushMatrix(); 
 
@@ -329,7 +359,12 @@ void Scene::renderScene(bool g_shader){
 		glRotatef(degrees(thetaY),0,1,0); // Rotate scene around y axis
 		
 		// Render the eye
-		renderEye(g_shader);
+    if(g_renderEye){
+      renderEye(g_shader);
+    }
+		else{
+      renderSphere(g_shader);
+    }
 
 
 	glPopMatrix();
@@ -409,8 +444,12 @@ void Scene::renderEye(bool g_shader){
 		
 		////// Main Eye //////
 		glPushMatrix(); 
+      //enableTextures(g_mainTexture);
 			setMaterial(g_eyeMain->m_material);
+      //glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_TRUE);  
 			g_eyeMain->renderGeometry();
+      //glUniform1i(glGetUniformLocation(g_shader, "texture"), GL_FALSE);
+      //glDisable(GL_TEXTURE_2D);
 		glPopMatrix();
 		
 		////// Iris //////
@@ -453,6 +492,23 @@ void Scene::renderEye(bool g_shader){
             g_eyeCornea->renderGeometry();
 			glDisable(GL_BLEND);
 		glPopMatrix();
-		
 	glPopMatrix();
+}
+
+void Scene::renderSphere(bool g_shader){
+
+  glPushMatrix(); 
+  //glScalef(2.9,2.9,2.9);
+  glTranslatef(0.0, -2.9, 0.0);
+  glScalef(1.5,1.5,1.5);
+  glUniform1i(glGetUniformLocation(g_shader, "reflect_map"), GL_TRUE);
+  setMaterial(g_sphere->m_material);
+  g_sphere->renderGeometry();
+
+  glPopMatrix();
+
+}
+
+void Scene::toggleEye(){
+  g_renderEye = !g_renderEye;
 }
