@@ -1,42 +1,92 @@
+//---------------------------------------------------------------------------
+//
+// Copyright (c) 2015 Taehyun Rhee, Joshua Scott, Ben Allen
+//
+// This software is provided 'as-is' for assignment of COMP308 in ECS,
+// Victoria University of Wellington, without any express or implied warranty. 
+// In no event will the authors be held liable for any damages arising from
+// the use of this software.
+//
+// The contents of this file may not be copied or duplicated in any form
+// without the prior permission of its owner.
+//
+//----------------------------------------------------------------------------
+
 #version 120
 
-varying vec3 normalInterp;
-varying vec3 vertPos;
+// Constant across both shaders
+uniform sampler2D texture0;
+uniform bool texture;
+uniform bool reflect_map;
+uniform samplerCube env;
 
-uniform int mode;
 
-const vec3 lightPos = vec3(1.0,1.0,1.0);
-const vec3 ambientColor = vec3(0.1, 0.0, 0.0);
-const vec3 diffuseColor = vec3(0.5, 0.0, 0.0);
-const vec3 specColor = vec3(1.0, 1.0, 1.0);
+// Values passed in from the vertex shader
+varying vec3 vNormal;
+varying vec3 vPosition;
+varying vec2 vTextureCoord0;
+varying float refFactor;
 
-void main() {
+vec4 empty = vec4(0.0, 0.0, 0.0, 0.0);
 
-  vec3 normal = normalize(normalInterp);
-  vec3 lightDir = normalize(lightPos - vertPos);
+#define MAX_LIGHTS 2 
 
-  float lambertian = max(dot(lightDir,normal), 0.0);
-  float specular = 0.0;
+void main (void) 
+{ 
+   vec3 N = normalize(vNormal);
+   vec4 finalColor = vec4(0.0, 0.0, 0.0, 0.0);
+   
+   for (int i=1;i<MAX_LIGHTS;i++)
+   {
+		vec3 L = normalize(gl_LightSource[i].position.xyz); // Directional light
+		//vec3 L = normalize(gl_LightSource[i].position.xyz - vPosition); // Other
+		vec3 E = normalize(-vPosition); // we are in Eye Coordinates, so EyePos is (0,0,0) 
+		vec3 R = normalize(-reflect(L,N)); 
+		vec3 H = normalize(L + N); 
 
-  if(lambertian > 0.0) {
+		//calculate Ambient Term: 
+		vec4 Iamb = gl_FrontLightProduct[i].ambient; 
 
-    vec3 viewDir = normalize(-vertPos);
+		//calculate Diffuse Term: 
+		vec4 Idiff = gl_FrontLightProduct[i].diffuse * max(dot(N,L), 0.0);
+		Idiff = clamp(Idiff, 0.0, 1.0); 
 
-    // this is blinn phong
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float specAngle = max(dot(halfDir, normal), 0.0);
-    specular = pow(specAngle, 16.0);
-       
-    // this is phong (for comparison)
-    if(mode == 2) {
-      vec3 reflectDir = reflect(-lightDir, normal);
-      specAngle = max(dot(reflectDir, viewDir), 0.0);
-      // note that the exponent is different here
-      specular = pow(specAngle, 4.0);
-    }
-  }
+		// calculate Specular Term:
+		//vec4 Ispec = gl_FrontLightProduct[i].specular * pow(max(dot(R,E),0.0),0.3*gl_FrontMaterial.shininess); // Phong
 
-  gl_FragColor = vec4(ambientColor +
-                      lambertian * diffuseColor +
-                      specular * specColor, 1.0);
+		vec4 Ispec = gl_FrontLightProduct[i].specular * pow(max(dot(H,N),0.0),gl_FrontMaterial.shininess); // Blin-Phong
+
+		Ispec = clamp(Ispec, 0.0, 1.0); 
+			
+		if(texture){
+			finalColor += (Iamb + Idiff + Ispec) * texture2D(texture0, vTextureCoord0);
+		}
+		else{
+			finalColor += Iamb + Idiff + Ispec;
+
+		}
+   }
+
+   	vec3 I = normalize(vPosition); // Camera position
+    vec3 R = reflect(I, vNormal);
+   
+	// write Total Color: 
+	if(texture){
+
+		gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
+
+		// No reflection
+		//gl_FragColor = finalColor;
+	}
+	else{
+
+		if(reflect_map){
+			gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
+		}
+		else{
+			// No reflection
+			gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
+		}
+	}
+   
 }

@@ -153,8 +153,7 @@ void initCubeMap(){
 
 
 void initShader() {
-	g_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/my_phong_multi.frag");
-	transparent_shader = makeShaderProgram("../work/res/shaders/my_phong.vert", "../work/res/shaders/transparent.frag");
+	g_shader = makeShaderProgram("../work/res/shaders/phong.vert", "../work/res/shaders/phong.frag");
 }
 
 

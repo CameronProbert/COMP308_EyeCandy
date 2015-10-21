@@ -17,7 +17,9 @@
 // Constant across both shaders
 uniform sampler2D texture0;
 uniform bool texture;
+uniform bool reflect_map;
 uniform samplerCube env;
+
 
 // Values passed in from the vertex shader
 varying vec3 vNormal;
@@ -40,6 +42,7 @@ void main (void)
 		//vec3 L = normalize(gl_LightSource[i].position.xyz - vPosition); // Other
 		vec3 E = normalize(-vPosition); // we are in Eye Coordinates, so EyePos is (0,0,0) 
 		vec3 R = normalize(-reflect(L,N)); 
+		vec3 H = normalize(L + N); 
 
 		//calculate Ambient Term: 
 		vec4 Iamb = gl_FrontLightProduct[i].ambient; 
@@ -49,7 +52,10 @@ void main (void)
 		Idiff = clamp(Idiff, 0.0, 1.0); 
 
 		// calculate Specular Term:
-		vec4 Ispec = gl_FrontLightProduct[i].specular * pow(max(dot(R,E),0.0),0.3*gl_FrontMaterial.shininess);
+		vec4 Ispec = gl_FrontLightProduct[i].specular * pow(max(dot(R,E),0.0),0.3*gl_FrontMaterial.shininess); // Phong
+
+		//vec4 Ispec = gl_FrontLightProduct[i].specular * pow(max(dot(H,N),0.0),gl_FrontMaterial.shininess); // Blin-Phong
+
 		Ispec = clamp(Ispec, 0.0, 1.0); 
 			
 		if(texture){
@@ -67,23 +73,20 @@ void main (void)
 	// write Total Color: 
 	if(texture){
 
-		//gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
-
-		// Transparent for testing
-		gl_FragColor = mix(empty, textureCube(env, R), refFactor); 
+		gl_FragColor = mix(finalColor, textureCube(env, R), refFactor); 
 
 		// No reflection
 		//gl_FragColor = finalColor;
 	}
 	else{
 
-		//gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
-
-		// Transparent for testing
-		gl_FragColor = mix(empty, textureCube(env, R), refFactor);
-
-		// No reflection
-		//gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
+		if(reflect_map){
+			gl_FragColor = mix((gl_FrontLightModelProduct.sceneColor + finalColor), textureCube(env, R), refFactor);
+		}
+		else{
+			// No reflection
+			gl_FragColor = gl_FrontLightModelProduct.sceneColor + finalColor; 
+		}
 	}
    
 }
